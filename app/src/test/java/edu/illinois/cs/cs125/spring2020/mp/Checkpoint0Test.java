@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Random;
 
 import edu.illinois.cs.cs125.spring2020.mp.logic.GameStateID;
+import edu.illinois.cs.cs125.spring2020.mp.logic.LineCrossDetector;
 import edu.illinois.cs.cs125.spring2020.mp.logic.PlayerStateID;
 import edu.illinois.cs.cs125.spring2020.mp.logic.TeamID;
 import edu.illinois.cs.cs125.spring2020.mp.logic.WebApi;
@@ -515,6 +516,33 @@ public class Checkpoint0Test {
             return;
         }
 
+        // Make sure LineCrossDetector wasn't accidentally broken
+        try {
+            Method linesCross = LineCrossDetector.class.getMethod("linesCross",
+                    double.class, double.class, double.class, double.class, double.class, double.class, double.class, double.class);
+            final String linesCrossFail = "The logic of LineCrossDetector was accidentally broken";
+            Assert.assertFalse(linesCrossFail, (Boolean) linesCross.invoke(null,
+                    40.1, -88.6, 40.5, -89.0, 40.6, -88.1, 40.9, -88.2));
+            Assert.assertTrue(linesCrossFail, (Boolean) linesCross.invoke(null,
+                    40.2, -88.3, 40.2, -88.7, 40.1, -88.5, 40.3, -88.5));
+
+            // Randomized tests (from JSON)
+            for (JsonObject test : JsonResourceLoader.loadArray("linescross")) {
+                double startLat1 = test.get("sla1").getAsDouble();
+                double startLng1 = test.get("sln1").getAsDouble();
+                double endLat1 = test.get("ela1").getAsDouble();
+                double endLng1 = test.get("eln1").getAsDouble();
+                double startLat2 = test.get("sla2").getAsDouble();
+                double startLng2 = test.get("sln2").getAsDouble();
+                double endLat2 = test.get("ela2").getAsDouble();
+                double endLng2 = test.get("eln2").getAsDouble();
+                Assert.assertEquals(linesCrossFail, test.get("answer").getAsBoolean(), linesCross.invoke(
+                        null, startLat1, startLng1, endLat1, endLng1, startLat2, startLng2, endLat2, endLng2));
+            }
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
+
         // Test capturing the first target (i.e. an empty path)
         Assert.assertTrue("A single target should be capturable",
                 invoker.invoke(new double[] {40.1}, new double[] {-88.2}, new int[] {-1}, 0));
@@ -568,7 +596,6 @@ public class Checkpoint0Test {
           (1 is start) |
                        |
               1--->3-->2
-
                  4         (can't capture 4 because the line from 0 to 4 would cross 1-3 or 3-2)
          */
         Assert.assertFalse("It should not be possible to capture across a line formed by previous captures",

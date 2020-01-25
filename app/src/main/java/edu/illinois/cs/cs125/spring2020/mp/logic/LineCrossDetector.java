@@ -41,15 +41,15 @@ public class LineCrossDetector {
                 || LatLngUtils.same(firstEndLat, firstEndLng, secondStartLat, secondStartLng)
                 || LatLngUtils.same(firstEndLat, firstEndLng, secondEndLat, secondEndLng)) {
             // The lines are just sharing endpoints, not crossing each other
-            return false; }
-
+            return false;
+        }
         // A line is vertical (purely north-south) if its longitude is constant
         boolean firstVertical = LatLngUtils.same(firstStartLng, firstEndLng);
         boolean secondVertical = LatLngUtils.same(secondStartLng, secondEndLng);
-        if (firstVertical && secondVertical){
+        if (firstVertical && secondVertical) {
             // They're parallel vertical lines
             return false;
-        }else if (firstVertical) {
+        } else if (firstVertical) {
             return lineCrossesVertical(firstStartLat, firstEndLat, firstStartLng,
                     secondStartLat, secondStartLng, secondEndLat, secondEndLng);
         } else if (secondVertical) {
@@ -76,8 +76,10 @@ public class LineCrossDetector {
             // Endpoint of one line is in the middle of the other line
             return true;
         }
-        boolean onFirst = intersectionX > Math.min(firstStartLng, firstEndLng) && intersectionX < Math.max(firstStartLng, firstEndLng);
-        boolean onSecond = intersectionX > Math.min(secondStartLng, secondEndLng) && intersectionX < Math.max(secondStartLng, secondEndLng);
+        boolean onFirst = intersectionX > Math.min(firstStartLng, firstEndLng)
+                && intersectionX < Math.max(firstStartLng, firstEndLng);
+        boolean onSecond = intersectionX > Math.min(secondStartLng, secondEndLng)
+                && intersectionX < Math.max(secondStartLng, secondEndLng);
         return onFirst && onSecond;
     }
 

@@ -58,6 +58,14 @@ public class TargetVisitChecker {
                                               final int range) {
         // HINT: To find the distance in meters between two locations, use a provided helper function:
         // LatLngUtils.distance(oneLatitude, oneLongitude, otherLatitude, otherLongitude)
+        for (int i = 0; i < latitudes.length; i++) {
+            if (i == targetIndex) {
+                double distance = LatLngUtils.distance(currentLatitude, currentLongitude, latitudes[i], longitudes[i]);
+                if ((int) distance <= range) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -73,6 +81,11 @@ public class TargetVisitChecker {
      * @return whether the specified target is already visited
      */
     public static boolean isTargetVisited(final int[] path, final int targetIndex) {
+        for (int i = 0; i < path.length; i++) {
+            if (path[i] != -1 && path[i] == targetIndex) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -98,6 +111,13 @@ public class TargetVisitChecker {
                                         final int range) {
         // HINT: Implement isTargetWithinRange and isTargetVisited (above) first.
         // Then you can call them in this function.
+        for (int i = 0; i < path.length; i++) {
+            if (!isTargetVisited(path, i)) {
+                if (isTargetWithinRange(latitudes, longitudes, i, currentLatitude, currentLongitude, range)) {
+                    return i;
+                }
+            }
+        }
         return -1;
     }
 
@@ -141,6 +161,15 @@ public class TargetVisitChecker {
      * @return the index in the path array that was updated, or -1 if the path array was full
      */
     public static int visitTarget(final int[] path, final int targetIndex) {
+        if (path == null) {
+            return -1;
+        }
+        for (int i = 0; i < path.length; i++) {
+            if (path[i] == -1) {
+                path[i] = targetIndex;
+                return i;
+            }
+        }
         return -1;
     }
 

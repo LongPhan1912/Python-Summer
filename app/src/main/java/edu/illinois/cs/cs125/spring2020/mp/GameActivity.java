@@ -28,6 +28,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import java.util.List;
 
 import edu.illinois.cs.cs125.spring2020.mp.logic.DefaultTargets;
 import edu.illinois.cs.cs125.spring2020.mp.logic.LatLngUtils;
+import edu.illinois.cs.cs125.spring2020.mp.logic.TargetVisitChecker;
 
 /*
  * Welcome to the Machine Project app!
@@ -184,6 +186,9 @@ public final class GameActivity extends AppCompatActivity {
         map.getUiSettings().setMapToolbarEnabled(false);
 
         // Use the provided placeMarker function to add a marker at every target's location
+        for (int i = 0; i < targetLats.length; i++) {
+            placeMarker(targetLats[i], targetLngs[i]);
+        }
         // HINT: onCreate initializes the relevant arrays (targetLats, targetLngs) for you
     }
 
@@ -201,6 +206,32 @@ public final class GameActivity extends AppCompatActivity {
         // HINT: To operate on the game state, use the three methods you implemented in TargetVisitChecker
         // You can call them by prefixing their names with "TargetVisitChecker." e.g. TargetVisitChecker.visitTarget
         // The arrays to operate on are targetLats, targetLngs, and path
+
+        int lastVisited = -1;
+        for (int i = 0; i < path.length - 1; i++) {
+            if (path[i] != -1) {
+                lastVisited = i;
+            }
+        }
+        // looks for index of unvisited target
+        int candidate = TargetVisitChecker.getVisitCandidate(targetLats, targetLngs, path,
+                latitude, longitude, PROXIMITY_THRESHOLD);
+        if (candidate != -1) {
+            // sequential captures (bold)
+            for (int i = 0; i < targetLats.length; i++) {
+                if (TargetVisitChecker.checkSnakeRule(targetLats, targetLngs, path, i)
+                        && LatLngUtils.distance(targetLats[i], targetLngs[i], latitude, longitude) <= PROXIMITY_THRESHOLD) {
+                    // claims the target
+                    TargetVisitChecker.visitTarget(path, i);
+                    changeMarkerColor(targetLats[i], targetLngs[i], CAPTURED_MARKER_HUE);
+                    lastVisited++;
+                    if (lastVisited < targetLats.length && lastVisited > 0) {
+                        addLine(targetLats[path[lastVisited]], targetLngs[path[lastVisited]],
+                                targetLats[path[lastVisited - 1]], targetLngs[path[lastVisited - 1]], PLAYER_COLOR);
+                    }
+                }
+            }
+        }
 
         // When the player gets within the PROXIMITY_THRESHOLD of a target, it should be captured and turned green
         // Sequential captures should create green connecting lines on the map

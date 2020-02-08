@@ -28,7 +28,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
@@ -202,33 +201,24 @@ public final class GameActivity extends AppCompatActivity {
     @VisibleForTesting // Actually just visible for documentation - not called directly by test suites
     public void onLocationUpdate(final double latitude, final double longitude) {
         // This function is responsible for updating the game state and map according to the user's movements
-
+        //
         // HINT: To operate on the game state, use the three methods you implemented in TargetVisitChecker
         // You can call them by prefixing their names with "TargetVisitChecker." e.g. TargetVisitChecker.visitTarget
         // The arrays to operate on are targetLats, targetLngs, and path
-
-        int lastVisited = -1;
-        for (int i = 0; i < path.length - 1; i++) {
-            if (path[i] != -1) {
-                lastVisited = i;
-            }
-        }
-        // looks for index of unvisited target
+        //
+        // candidate tells you the target in sight
         int candidate = TargetVisitChecker.getVisitCandidate(targetLats, targetLngs, path,
                 latitude, longitude, PROXIMITY_THRESHOLD);
         if (candidate != -1) {
-            // sequential captures (bold)
-            for (int i = 0; i < targetLats.length; i++) {
-                if (TargetVisitChecker.checkSnakeRule(targetLats, targetLngs, path, i)
-                        && LatLngUtils.distance(targetLats[i], targetLngs[i], latitude, longitude) <= PROXIMITY_THRESHOLD) {
-                    // claims the target
-                    TargetVisitChecker.visitTarget(path, i);
-                    changeMarkerColor(targetLats[i], targetLngs[i], CAPTURED_MARKER_HUE);
-                    lastVisited++;
-                    if (lastVisited < targetLats.length && lastVisited > 0) {
-                        addLine(targetLats[path[lastVisited]], targetLngs[path[lastVisited]],
-                                targetLats[path[lastVisited - 1]], targetLngs[path[lastVisited - 1]], PLAYER_COLOR);
-                    }
+            // check the snake rule to see if it's possible for capture
+            if (TargetVisitChecker.checkSnakeRule(targetLats, targetLngs, path, candidate)) {
+                // mark the target captured and change its colour
+                int latestCapture = TargetVisitChecker.visitTarget(path, candidate);
+                changeMarkerColor(targetLats[candidate], targetLngs[candidate], CAPTURED_MARKER_HUE);
+                // want to connect line between the target and our last captured target
+                if (latestCapture != 0) {
+                    addLine(targetLats[path[latestCapture]], targetLngs[path[latestCapture]],
+                            targetLats[path[latestCapture - 1]], targetLngs[path[latestCapture - 1]], PLAYER_COLOR);
                 }
             }
         }

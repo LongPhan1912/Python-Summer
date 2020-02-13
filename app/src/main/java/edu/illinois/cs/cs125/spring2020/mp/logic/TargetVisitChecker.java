@@ -58,13 +58,18 @@ public class TargetVisitChecker {
                                               final int range) {
         // HINT: To find the distance in meters between two locations, use a provided helper function:
         // LatLngUtils.distance(oneLatitude, oneLongitude, otherLatitude, otherLongitude)
-        for (int i = 0; i < latitudes.length; i++) {
-            if (i == targetIndex) {
-                double distance = LatLngUtils.distance(currentLatitude, currentLongitude, latitudes[i], longitudes[i]);
-                if ((int) distance <= range) {
-                    return true;
-                }
-            }
+//        for (int i = 0; i < latitudes.length; i++) {
+//            if (i == targetIndex) {
+//                double distance = LatLngUtils.distance(currentLatitude, currentLongitude,
+//                latitudes[i], longitudes[i]);
+//                if ((int) distance <= range) {
+//                    return true;
+//                }
+//            }
+//        }
+        if ((int) LatLngUtils.distance(currentLatitude, currentLongitude,
+                latitudes[targetIndex], longitudes[targetIndex]) <= range) {
+            return true;
         }
         return false;
     }

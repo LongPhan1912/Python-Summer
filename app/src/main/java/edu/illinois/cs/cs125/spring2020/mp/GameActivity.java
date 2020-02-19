@@ -28,12 +28,14 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.illinois.cs.cs125.spring2020.mp.logic.AreaDivider;
 import edu.illinois.cs.cs125.spring2020.mp.logic.DefaultTargets;
 import edu.illinois.cs.cs125.spring2020.mp.logic.LatLngUtils;
 import edu.illinois.cs.cs125.spring2020.mp.logic.TargetVisitChecker;
@@ -104,6 +106,9 @@ public final class GameActivity extends AppCompatActivity {
     /** The sequence of target indexes captured by the player (-1 if none). */
     private int[] path;
 
+    /** new proximity threshold. */
+    private int proximity;
+
     /**
      * Called by the Android system when the activity is to be set up.
      * <p>
@@ -165,6 +170,24 @@ public final class GameActivity extends AppCompatActivity {
             hasLocationPermission = true;
             startLocationWatching();
         }
+        String mode = getIntent().getStringExtra("mode");
+        if (mode.equals("target")) {
+            proximity = getIntent().getIntExtra("proximityThreshold", 0);
+        }
+        if (mode.equals("area")) {
+            int cellSize = getIntent().getIntExtra("cellSize", 0);
+            double areaNorth = getIntent().getDoubleExtra("areaNorth", 0);
+            double areaSouth = getIntent().getDoubleExtra("areaSouth", 0);
+            double areaWest = getIntent().getDoubleExtra("areaWest", 0);
+            double areaEast = getIntent().getDoubleExtra("areaEast", 0);
+            AreaDivider divider = new AreaDivider(areaNorth, areaEast, areaSouth, areaWest, cellSize);
+            boolean[][] cell;
+            double areaCellWidth = Math.abs(areaEast - areaWest) / divider.getXCells();
+            double areaCellHeight = Math.abs(areaNorth - areaSouth) / divider.getYCells();
+            PolygonOptions polishPolly = new PolygonOptions();
+            map.addPolygon(polishPolly);
+            divider.renderGrid(map);
+        }
     }
 
     /**
@@ -208,7 +231,7 @@ public final class GameActivity extends AppCompatActivity {
         //
         // candidate tells you the target in sight
         int candidate = TargetVisitChecker.getVisitCandidate(targetLats, targetLngs, path,
-                latitude, longitude, PROXIMITY_THRESHOLD);
+                latitude, longitude, proximity);
         if (candidate != -1) {
             // check the snake rule to see if it's possible for capture
             if (TargetVisitChecker.checkSnakeRule(targetLats, targetLngs, path, candidate)) {

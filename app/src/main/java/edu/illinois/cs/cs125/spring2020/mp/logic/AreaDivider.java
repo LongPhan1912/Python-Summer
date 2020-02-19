@@ -1,7 +1,10 @@
 package edu.illinois.cs.cs125.spring2020.mp.logic;
 
+import android.graphics.Color;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 /**
  * Divides a rectangular area into identically sized, roughly square cells.
@@ -72,8 +75,17 @@ public class AreaDivider {
      * @return the boundaries of the cell
      */
     public com.google.android.gms.maps.model.LatLngBounds getCellBounds(final int x, final int y) {
-        LatLngBounds areaBounds = new LatLngBounds(new LatLng(south, west), new LatLng(north, east));
-        return areaBounds;
+        double verticalDifference = Math.abs(north - south);
+        double horizontalDifference = Math.abs(east - west);
+        double contextualCellHeight = verticalDifference / getYCells();
+        double contextualCellWidth = horizontalDifference / getXCells();
+        double southWestX = west + contextualCellWidth * x;
+        double northEastX = west + contextualCellWidth * (x + 1);
+        double southWestY = south + contextualCellHeight * y;
+        double northEastY = south + contextualCellHeight * (y + 1);
+        LatLng cellSW = new LatLng(southWestY, southWestX);
+        LatLng cellNE = new LatLng(northEastY, northEastX);
+        return new LatLngBounds(cellSW, cellNE);
     }
 
     /**
@@ -165,5 +177,22 @@ public class AreaDivider {
      * @param map - the Google map to draw on
      */
     public void renderGrid(final com.google.android.gms.maps.GoogleMap map) {
+        PolylineOptions drawMeLines = new PolylineOptions();
+        double contextualCellHeight = Math.abs(north - south) / getYCells();
+        double contextualCellWidth = Math.abs(east - west) / getXCells();
+        for (int i = 0; i <= getYCells(); i++) {
+            LatLng horizontalStart = new LatLng(south + contextualCellHeight * i, west);
+            LatLng horizontalEnd = new LatLng(south + contextualCellHeight * i, east);
+            drawMeLines.add(horizontalStart, horizontalEnd);
+            drawMeLines.color(Color.BLACK);
+            map.addPolyline(drawMeLines);
+        }
+        for (int i = 0; i <= getXCells(); i++) {
+            LatLng verticalStart = new LatLng(south, west + contextualCellWidth * i);
+            LatLng verticalEnd = new LatLng(north, west + contextualCellWidth * i);
+            drawMeLines.add(verticalStart, verticalEnd);
+            drawMeLines.color(Color.BLACK);
+            map.addPolyline(drawMeLines);
+        }
     }
 }

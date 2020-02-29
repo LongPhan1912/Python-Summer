@@ -26,6 +26,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
@@ -109,6 +110,25 @@ public final class GameActivity extends AppCompatActivity {
     /** new proximity threshold. */
     private int proximity;
 
+    /** area divider to be used for multiple classes. */
+    private AreaDivider divider;
+    /** the game mode. */
+    private String gameMode;
+    /** check whether each cell is visited. */
+    private boolean[][] cell;
+    /** latitude of the north boundary. */
+    private double areaNorth;
+    /** longitude of the east boundary. */
+    private double areaEast;
+    /** latitude of the south boundary. */
+    private double areaSouth;
+    /** longitude of the west boundary. */
+    private double areaWest;
+    /** previous capture x. */
+    private static int prevX = -1;
+    /** previous capture y. */
+    private static int prevY = -1;
+
     /**
      * Called by the Android system when the activity is to be set up.
      * <p>
@@ -125,11 +145,24 @@ public final class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
         Log.v(TAG, "Created");
 
-        // Load the predefined targets
-        targetLats = DefaultTargets.getLatitudes(this);
-        targetLngs = DefaultTargets.getLongitudes(this);
-        path = new int[targetLats.length];
-        Arrays.fill(path, -1); // No targets visited initially
+        gameMode = getIntent().getStringExtra("mode");
+        if (gameMode.equals("target")) {
+            // Load the predefined targets
+            targetLats = DefaultTargets.getLatitudes(this);
+            targetLngs = DefaultTargets.getLongitudes(this);
+            path = new int[targetLats.length];
+            Arrays.fill(path, -1); // No targets visited initially
+            proximity = getIntent().getIntExtra("proximityThreshold", 0);
+        }
+        if (gameMode.equals("area")) {
+            int cellSize = getIntent().getIntExtra("cellSize", 0);
+            areaNorth = getIntent().getDoubleExtra("areaNorth", 0);
+            areaSouth = getIntent().getDoubleExtra("areaSouth", 0);
+            areaWest = getIntent().getDoubleExtra("areaWest", 0);
+            areaEast = getIntent().getDoubleExtra("areaEast", 0);
+            divider = new AreaDivider(areaNorth, areaEast, areaSouth, areaWest, cellSize);
+            cell = new boolean[divider.getXCells()][divider.getYCells()];
+        }
 
         // Start the process of getting a Google Maps object for the map
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -170,24 +203,6 @@ public final class GameActivity extends AppCompatActivity {
             hasLocationPermission = true;
             startLocationWatching();
         }
-        String mode = getIntent().getStringExtra("mode");
-        if (mode.equals("target")) {
-            proximity = getIntent().getIntExtra("proximityThreshold", 0);
-        }
-        if (mode.equals("area")) {
-            int cellSize = getIntent().getIntExtra("cellSize", 0);
-            double areaNorth = getIntent().getDoubleExtra("areaNorth", 0);
-            double areaSouth = getIntent().getDoubleExtra("areaSouth", 0);
-            double areaWest = getIntent().getDoubleExtra("areaWest", 0);
-            double areaEast = getIntent().getDoubleExtra("areaEast", 0);
-            AreaDivider divider = new AreaDivider(areaNorth, areaEast, areaSouth, areaWest, cellSize);
-            boolean[][] cell;
-            double areaCellWidth = Math.abs(areaEast - areaWest) / divider.getXCells();
-            double areaCellHeight = Math.abs(areaNorth - areaSouth) / divider.getYCells();
-            PolygonOptions polishPolly = new PolygonOptions();
-            map.addPolygon(polishPolly);
-            divider.renderGrid(map);
-        }
     }
 
     /**
@@ -207,11 +222,16 @@ public final class GameActivity extends AppCompatActivity {
         map.getUiSettings().setIndoorLevelPickerEnabled(false);
         map.getUiSettings().setMapToolbarEnabled(false);
 
-        // Use the provided placeMarker function to add a marker at every target's location
-        for (int i = 0; i < targetLats.length; i++) {
-            placeMarker(targetLats[i], targetLngs[i]);
+        if (gameMode.equals("area")) {
+            divider.renderGrid(map);
+        } else {
+
+            // Use the provided placeMarker function to add a marker at every target's location
+            for (int i = 0; i < targetLats.length; i++) {
+                placeMarker(targetLats[i], targetLngs[i]);
+            }
+            // HINT: onCreate initializes the relevant arrays (targetLats, targetLngs) for you
         }
-        // HINT: onCreate initializes the relevant arrays (targetLats, targetLngs) for you
     }
 
     /**
@@ -228,28 +248,55 @@ public final class GameActivity extends AppCompatActivity {
         // HINT: To operate on the game state, use the three methods you implemented in TargetVisitChecker
         // You can call them by prefixing their names with "TargetVisitChecker." e.g. TargetVisitChecker.visitTarget
         // The arrays to operate on are targetLats, targetLngs, and path
-        //
-        // candidate tells you the target in sight
-        int candidate = TargetVisitChecker.getVisitCandidate(targetLats, targetLngs, path,
-                latitude, longitude, proximity);
-        if (candidate != -1) {
-            // check the snake rule to see if it's possible for capture
-            if (TargetVisitChecker.checkSnakeRule(targetLats, targetLngs, path, candidate)) {
-                // mark the target captured and change its colour
-                int latestCapture = TargetVisitChecker.visitTarget(path, candidate);
-                changeMarkerColor(targetLats[candidate], targetLngs[candidate], CAPTURED_MARKER_HUE);
-                // want to connect line between the target and our last captured target
-                if (latestCapture != 0) {
-                    addLine(targetLats[path[latestCapture]], targetLngs[path[latestCapture]],
-                            targetLats[path[latestCapture - 1]], targetLngs[path[latestCapture - 1]], PLAYER_COLOR);
+        if (gameMode.equals("target")) {
+            // candidate tells you the target in sight
+            int candidate = TargetVisitChecker.getVisitCandidate(targetLats, targetLngs, path,
+                    latitude, longitude, proximity);
+            if (candidate != -1) {
+                // check the snake rule to see if it's possible for capture
+                if (TargetVisitChecker.checkSnakeRule(targetLats, targetLngs, path, candidate)) {
+                    // mark the target captured and change its colour
+                    int latestCapture = TargetVisitChecker.visitTarget(path, candidate);
+                    changeMarkerColor(targetLats[candidate], targetLngs[candidate], CAPTURED_MARKER_HUE);
+                    // want to connect line between the target and our last captured target
+                    if (latestCapture != 0) {
+                        addLine(targetLats[path[latestCapture]], targetLngs[path[latestCapture]],
+                                targetLats[path[latestCapture - 1]], targetLngs[path[latestCapture - 1]], PLAYER_COLOR);
+                    }
                 }
             }
-        }
+        } else {
 
-        // When the player gets within the PROXIMITY_THRESHOLD of a target, it should be captured and turned green
-        // Sequential captures should create green connecting lines on the map
-        // HINT: Use the provided changeMarkerColor and addLine functions to manipulate the map
-        // HINT: Use the provided color constants near the top of this file as arguments to those functions
+            // When the player gets within the PROXIMITY_THRESHOLD of a target, it should be captured and turned green
+            // Sequential captures should create green connecting lines on the map
+            // HINT: Use the provided changeMarkerColor and addLine functions to manipulate the map
+            // HINT: Use the provided color constants near the top of this file as arguments to those functions
+            LatLng location = new LatLng(latitude, longitude);
+            int xCoord = divider.getXIndex(location);
+            int yCoord = divider.getYIndex(location);
+            if (xCoord < 0 || yCoord < 0) {
+                return;
+            }
+            LatLngBounds bounds = divider.getCellBounds(xCoord, yCoord);
+            if (longitude > areaEast || longitude < areaWest
+                    || latitude < areaSouth || latitude > areaNorth) {
+                return;
+            }
+            if (cell[xCoord][yCoord]) {
+                return;
+            }
+            if ((prevX != -1 || prevY != -1) && (Math.abs(prevX - xCoord) + Math.abs(prevY - yCoord) > 1)) {
+                return;
+            }
+            cell[xCoord][yCoord] = true;
+            PolygonOptions poly = new PolygonOptions().add(bounds.southwest,
+                    new LatLng(bounds.southwest.latitude, bounds.northeast.longitude),
+                    bounds.northeast,
+                    new LatLng(bounds.northeast.latitude, bounds.southwest.longitude)).fillColor(PLAYER_COLOR);
+            map.addPolygon(poly);
+            prevX = xCoord;
+            prevY = yCoord;
+        }
     }
 
     /**

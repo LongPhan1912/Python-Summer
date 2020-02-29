@@ -34,8 +34,6 @@ public class AreaDivider {
     private double west;
     /** side length of each cell. */
     private int cellSize;
-    /** area divider to be used for multiple classes. */
-    private AreaDivider divider;
     /** total width of the area. */
     private double areaWidth;
     /** total height of the area. */

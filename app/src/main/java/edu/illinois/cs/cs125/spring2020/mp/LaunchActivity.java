@@ -13,7 +13,9 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 import java.util.List;
-
+/**
+ * helps us launch the activity.
+ */
 public class LaunchActivity extends AppCompatActivity {
     /** RC Sign In. */
     private static final int RC_SIGN_IN = 125;

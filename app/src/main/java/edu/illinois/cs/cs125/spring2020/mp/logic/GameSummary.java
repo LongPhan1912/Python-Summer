@@ -19,29 +19,21 @@ public class GameSummary {
     private String gameOwner;
     /** game state (can be paused, running, or ended). */
     private int gameState;
-    /** the player's email. */
-    private String playerEmail;
-    /** the gameStateID of the player. */
-    private int playerState;
-    /** the team of the player. */
-    private int playerTeam;
+    /** the JsonArray of players. */
+    private JsonArray players;
+    /** the JsonObject copy of infoFromServer. */
+    private JsonObject serverInfo;
     /**
      * Creates a game summary from JSON from the server.
      * @param infoFromServer - one object from the array in the /games response
      */
     public GameSummary(final com.google.gson.JsonObject infoFromServer) {
+        serverInfo = infoFromServer;
         gameID = infoFromServer.get("id").getAsString();
         gameMode = infoFromServer.get("mode").getAsString();
         gameOwner = infoFromServer.get("owner").getAsString();
         gameState = infoFromServer.get("state").getAsInt();
-        JsonArray players = infoFromServer.get("players").getAsJsonArray();
-        for (int i = 0; i < players.size(); i++) {
-            JsonObject player = players.get(i).getAsJsonObject();
-            playerEmail = player.get("email").getAsString();
-            System.out.println(playerEmail);
-            playerState = player.get("state").getAsInt();
-            playerTeam = player.get("team").getAsInt();
-        }
+        players = serverInfo.get("players").getAsJsonArray();
     }
     /**
      * Gets the unique, server-assigned ID of this game.
@@ -74,10 +66,14 @@ public class GameSummary {
      */
     public java.lang.String getPlayerRole(final java.lang.String userEmail,
                                           final android.content.Context context) {
-        System.out.println(playerEmail);
         String[] teamNames = context.getResources().getStringArray(R.array.team_choices);
-        if (playerEmail.equals(userEmail)) {
-            return teamNames[playerTeam];
+        for (int i = 0; i < players.size(); i++) {
+            JsonObject player = players.get(i).getAsJsonObject();
+            String playerEmail = player.get("email").getAsString();
+            if (userEmail.equals(playerEmail)) {
+                int team = player.get("team").getAsInt();
+                return teamNames[team];
+            }
         }
         return null;
     }
@@ -88,12 +84,17 @@ public class GameSummary {
      * @return whether the user is invited to this game
      */
     public boolean isInvitation(final java.lang.String userEmail) {
-        if (userEmail.equals(playerEmail)) {
-            if (playerState != PlayerStateID.INVITED) {
-                return false;
+        for (int i = 0; i < players.size(); i++) {
+            JsonObject player = players.get(i).getAsJsonObject();
+            String playerEmail = player.get("email").getAsString();
+            if (userEmail.equals(playerEmail)) {
+                int playerState = player.get("state").getAsInt();
+                if (playerState == PlayerStateID.INVITED && gameState != GameStateID.ENDED) {
+                    return true;
+                }
             }
         }
-        return gameState != GameStateID.ENDED;
+        return false;
     }
 
     /**
@@ -103,9 +104,16 @@ public class GameSummary {
      * @return whether this game is ongoing for the user
      */
     public boolean isOngoing(final java.lang.String userEmail) {
-        if (userEmail.equals(playerEmail)) {
-            if (gameState != GameStateID.ENDED) {
-                return playerState != PlayerStateID.INVITED;
+        for (int i = 0; i < players.size(); i++) {
+            JsonObject player = players.get(i).getAsJsonObject();
+            String playerEmail = player.get("email").getAsString();
+            if (userEmail.equals(playerEmail)) {
+                int playerState = player.get("state").getAsInt();
+                if (playerState == PlayerStateID.ACCEPTED || playerState == PlayerStateID.PLAYING) {
+                    if (gameState != GameStateID.ENDED) {
+                        return true;
+                    }
+                }
             }
         }
         return false;

@@ -21,6 +21,12 @@
             android:orientation="vertical"
             tools:visibility="visible">
 
+            <LinearLayout
+                android:id="@+id/ongoingGamesList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -33,6 +39,31 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/create_game" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/invitationsGroup"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/invitations"
+                android:textColor="@color/colorText"
+                android:textSize="18sp" />
+
+            <LinearLayout
+                android:id="@+id/invitationsList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
 
         </LinearLayout>
 

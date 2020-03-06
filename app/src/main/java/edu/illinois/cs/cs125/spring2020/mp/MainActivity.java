@@ -66,7 +66,6 @@ public final class MainActivity extends AppCompatActivity {
         ongoingGamesList.removeAllViews();
         invitationsList.removeAllViews();
         // variables to be used again
-        String gameMode = "";
         //
         for (int i = 0; i < listOfGames.size(); i++) {
             JsonObject currentGame = listOfGames.get(i).getAsJsonObject();

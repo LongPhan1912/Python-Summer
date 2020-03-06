@@ -44,7 +44,6 @@ public final class MainActivity extends AppCompatActivity {
         // Here we create an Intent for launching GameActivity and act on it with startActivity
         // End this activity so that it's removed from the history
         // Otherwise pressing the back button in the game would come back to a blank screen here
-        //finish();
     }
     /**
      * Populates the games lists UI with data retrieved from the server.

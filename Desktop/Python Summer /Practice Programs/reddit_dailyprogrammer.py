@@ -1,6 +1,49 @@
 # ------------------------------------------------------------------
+##  Challenge #378 [Easy] The Havel-Hakimi algorithm for graph realization
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/bqy1cf/20190520_challenge_378_easy_the_havelhakimi/
+
+def hh(seq):
+    # Remove all 0's from the sequence (i.e. warmup1).
+    # If the sequence is now empty (no elements left), stop and return true.
+    # Sort the sequence in descending order (i.e. warmup2).
+    # Remove the first answer (which is also the largest answer, or tied for the largest) from the sequence and call it N.
+    # The sequence is now 1 shorter than it was after the previous step.
+    # If N is greater than the length of this new sequence (i.e. warmup3), stop and return false.
+    # Subtract 1 from each of the first N elements of the new sequence (i.e. warmup4).
+    # Continue from step 1 using the sequence from the previous step.
+    # Eventually you'll either return true in step 2, or false in step 5.
+    while seq:
+        # print("begin: %s" % seq)
+        seq = [n for n in seq if n != 0]
+        if len(seq) == 0:
+            return True
+        # print("no zeroes: %s" % seq)
+        seq.sort(reverse=True)
+        N = seq.pop(0)
+        # print(N, "popped: %s" % seq)
+        if N > len(seq):
+            return False
+        else:
+            for i in range(N): seq[i] -= 1
+            # print("dec by 1: %s" % seq)
+    return True
+
+print(not hh([5, 3, 0, 2, 6, 2, 0, 7, 2, 5]))
+print(not hh([4, 2, 0, 1, 5, 0]))
+print(hh([3, 1, 2, 3, 1, 0]))
+print(hh([16, 9, 9, 15, 9, 7, 9, 11, 17, 11, 4, 9, 12, 14, 14, 12, 17, 0, 3, 16]))
+print(hh([14, 10, 17, 13, 4, 8, 6, 7, 13, 13, 17, 18, 8, 17, 2, 14, 6, 4, 7, 12]))
+print(not hh([15, 18, 6, 13, 12, 4, 4, 14, 1, 6, 18, 2, 6, 16, 0, 9, 10, 7, 12, 3]))
+print(not hh([6, 0, 10, 10, 10, 5, 8, 3, 0, 14, 16, 2, 13, 1, 2, 13, 6, 15, 5, 1]))
+print(not hh([2, 2, 0]))
+print(not hh([3, 2, 1]))
+print(hh([1, 1]))
+print(not hh([1]))
+print(hh([]))
+
+# ------------------------------------------------------------------
 ## Challenge #379: [Easy] Progressive taxation
-# Link: https://www.reddit.com/r/dailyprogrammer/comments/ffxabb/20200309_challenge_383_easy_necklace_matching/
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/cdieag/20190715_challenge_379_easy_progressive_taxation/
 
 # The income tax brackets of the nation of Examplia:
 # income cap      marginal tax rate
@@ -22,26 +65,33 @@ def tax(income):
             income -= deductible
     return int(total_tax)
 
-# print(tax(56789)) # => 8697
-# print(tax(1234567)) # => 473326
+# Run the program
+# print(tax(12000) == 200)
+# print(tax(56789) == 8697)
+# print(tax(1234567) == 473326)
 
-def max_tax(index):
-    max_tax = 0
-    rev = list(tax_brackets.items())
-    if index < len(rev):
-        max = rev[index][0]
-        min = rev[index + 1][0]
-        rate = rev[index + 1][1]
-        max_tax = (max - min) * rate
-    return max_tax
-print(max_tax(1))
+def get_income(tax_rate):
+    tax_rate = round(tax_rate, 4)
+    hi = 1000000000 - 1
+    lo = 0
+    result = 0
+    # use binary search: O(log(n))
+    while (lo <= hi):
+        mid = (hi + lo) / 2
+        to_compare = round(tax(mid) / mid, 4) # tax = income * tax_rate
+        if to_compare > tax_rate:
+            hi = mid - 1
+        elif to_compare < tax_rate:
+            lo = mid + 1
+        else:
+            result = round(mid)
+            break
+    return result
 
-# total_tax = income * tax_rate
-# def get_income(tax_rate):
-#
-# print(get_income(0.06) == 25000)
-# print(get_income(0.09) == 34375)
-# print(get_income(0.32) == 256250)
+# answer should be close to the provided comments
+# print(get_income(0.06)) # => 25000
+# print(get_income(0.09)) # => 34375
+# print(get_income(0.32)) # => 256250
 
 # ------------------------------------------------------------------
 ## Challenge #381: [Easy] Yahtzee Upper Section Scoring

@@ -1,4 +1,59 @@
 # ------------------------------------------------------------------
+##  Challenge #377 [Easy] Axis-aligned crate packing
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/bazy5j/20190408_challenge_377_easy_axisaligned_crate/
+
+def fit1(X, Y, x, y):
+    return int(X / x) * int(Y / y)
+
+# Run the program:
+# print(fit1(25, 18, 6, 5) == 12)
+# print(fit1(10, 10, 1, 1) == 100)
+# print(fit1(12, 34, 5, 6) == 10)
+# print(fit1(12345, 678910, 1112, 1314) == 5676)
+# print(fit1(5, 100, 6, 1) == 0)
+
+def fit2(X, Y, x, y):
+    return max(fit1(X, Y, x, y), fit1(X, Y, y, x))
+
+# Run the program:
+# print(fit2(25, 18, 6, 5) == 15)
+# print(fit2(12, 34, 5, 6) == 12)
+# print(fit2(12345, 678910, 1112, 1314) == 5676)
+# print(fit2(5, 5, 3, 2) == 2)
+# print(fit2(5, 100, 6, 1) == 80)
+# print(fit2(5, 5, 6, 1) == 0)
+
+from itertools import permutations
+def fit3(X, Y, Z, x, y, z):
+    b_dim = [x, y, z]
+    boxes = list(permutations(b_dim))
+    results = []
+    for box in boxes:
+        perm = fit2(X, Y, box[0], box[1]) * (int(Z / box[2]))
+        results.append(perm)
+    return max(results)
+# since fitN works, you can just use fixN here if you'd like
+
+# Run the program:
+# print(fit3(10, 10, 10, 1, 1, 1) == 1000)
+# print(fit3(12, 34, 56, 7, 8, 9) == 32)
+# print(fit3(123, 456, 789, 10, 11, 12) == 32604)
+# print(fit3(1234567, 89101112, 13141516, 171819, 202122, 232425) == 174648)
+
+def fitN(crate_dim, box_dim):
+    result = 0
+    for box in list(permutations(box_dim)):
+        fit = 1
+        for index, dim in enumerate(box):
+            # match correct crate_dim to the respective box_dim (ensure same orientation)
+            fit *= crate_dim[index] // dim
+        result = max(fit, result) # update result for each permutation (find greatest value)
+    return result
+# Run the program:
+print(fitN([12, 34, 56], [7, 8, 9]) == 32)
+print(fitN([123, 456, 789, 1011, 1213, 1415], [16, 17, 18, 19, 20, 21]) == 1883443968)
+
+# ------------------------------------------------------------------
 ##  Challenge #378 [Easy] The Havel-Hakimi algorithm for graph realization
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/bqy1cf/20190520_challenge_378_easy_the_havelhakimi/
 
@@ -28,18 +83,20 @@ def hh(seq):
             # print("dec by 1: %s" % seq)
     return True
 
-print(not hh([5, 3, 0, 2, 6, 2, 0, 7, 2, 5]))
-print(not hh([4, 2, 0, 1, 5, 0]))
-print(hh([3, 1, 2, 3, 1, 0]))
-print(hh([16, 9, 9, 15, 9, 7, 9, 11, 17, 11, 4, 9, 12, 14, 14, 12, 17, 0, 3, 16]))
-print(hh([14, 10, 17, 13, 4, 8, 6, 7, 13, 13, 17, 18, 8, 17, 2, 14, 6, 4, 7, 12]))
-print(not hh([15, 18, 6, 13, 12, 4, 4, 14, 1, 6, 18, 2, 6, 16, 0, 9, 10, 7, 12, 3]))
-print(not hh([6, 0, 10, 10, 10, 5, 8, 3, 0, 14, 16, 2, 13, 1, 2, 13, 6, 15, 5, 1]))
-print(not hh([2, 2, 0]))
-print(not hh([3, 2, 1]))
-print(hh([1, 1]))
-print(not hh([1]))
-print(hh([]))
+# Run the program: if 'not' appears before the sequence,
+# it means that the terminal should print true, meaning the sequence itself is false (not false is true)
+# print(not hh([5, 3, 0, 2, 6, 2, 0, 7, 2, 5]))
+# print(not hh([4, 2, 0, 1, 5, 0]))
+# print(hh([3, 1, 2, 3, 1, 0]))
+# print(hh([16, 9, 9, 15, 9, 7, 9, 11, 17, 11, 4, 9, 12, 14, 14, 12, 17, 0, 3, 16]))
+# print(hh([14, 10, 17, 13, 4, 8, 6, 7, 13, 13, 17, 18, 8, 17, 2, 14, 6, 4, 7, 12]))
+# print(not hh([15, 18, 6, 13, 12, 4, 4, 14, 1, 6, 18, 2, 6, 16, 0, 9, 10, 7, 12, 3]))
+# print(not hh([6, 0, 10, 10, 10, 5, 8, 3, 0, 14, 16, 2, 13, 1, 2, 13, 6, 15, 5, 1]))
+# print(not hh([2, 2, 0]))
+# print(not hh([3, 2, 1]))
+# print(hh([1, 1]))
+# print(not hh([1]))
+# print(hh([]))
 
 # ------------------------------------------------------------------
 ## Challenge #379: [Easy] Progressive taxation

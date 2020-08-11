@@ -1,11 +1,94 @@
 # ------------------------------------------------------------------
+##  Challenge #375 [Easy] Print a new number by adding one to each of its digit
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/aphavc/20190211_challenge_375_easy_print_a_new_number_by/
+
+def plus_one_to_digit(num):
+    remains = num
+    result = 0
+    extra = 0
+    for i in range(len(str(num))):
+        digit = remains % 10 # 1st loop: 8, 2nd loop: 9, 3rd loop: 9
+        result += (digit + 1) * (10**(i+extra)) # 1st loop: 9, 2nd loop: 100, 3rd loop: 10000
+        if digit >= 9: extra = 1
+        else: extra = 0
+        remains = (remains - digit) // 10 # 1st loop: 99, 2nd loop: 9
+    return result
+print(plus_one_to_digit(998))
+
+# ------------------------------------------------------------------
+##  Challenge #375 [Intermediate] A Card Flipping Game
+# https://www.reddit.com/r/dailyprogrammer/comments/aq6gfy/20190213_challenge_375_intermediate_a_card/
+def flip(char):
+    if char == '.': return char
+    else:
+        return '0' if char == '1' else '1'
+
+def remove_card(str, i):
+    seq = [char for char in str]
+    seq[i] = '.'
+    if i - 1 >= 0:
+        seq[i - 1] = flip(seq[i - 1])
+    if i + 1 < len(seq):
+        seq[i + 1] = flip(seq[i + 1])
+    return seq
+
+def card_flip(str, steps):
+    if len(steps) < len(str):
+        for i, char in enumerate(str):
+            if char == '1':
+                steps.append(i)
+                return card_flip(remove_card(str, i), steps)
+
+    return steps if str.count('.') == len(str) else 'no solution'
+
+# Run the program (should all be true):
+# print(card_flip('0100110', []) == [1, 0, 2, 3, 5, 4, 6])
+# print(card_flip('01001100111', []) == 'no solution')
+# print(card_flip('100001100101000', []) == [0, 1, 2, 3, 4, 6, 5, 7, 8, 11, 10, 9, 12, 13, 14])
+# Bonus input:
+# print(card_flip('010111111111100100101000100110111000101111001001011011000011000', []))
+
+# ------------------------------------------------------------------
+##  Challenge #376 [Intermediate] The Revised Julian Calendar
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/b0nuoh/20190313_challenge_376_intermediate_the_revised/
+
+def is_leap(year): # naive approach
+    if year % 4 != 0: return False
+    if year % 100 == 0 and not (year % 900 == 200 or year % 900 == 600): return False
+    return True
+
+def count_leaps(year):
+    # a year is a leap year if:
+    # it is a multiple of 4 and not a multiple of 100
+    # except when the remainder when divided by 900 is either 200 or 600
+    return year // 4 - year // 100 + (year - 600) // 900 + (year - 200) // 900
+
+def leaps(year1, year2):
+    if year2 < year1: return None
+    elif year1 == year2: return 0
+    else:
+        year1 -= 1
+        # for year in range(year1, year2): # O(n) implementation
+        #     if is_leap(year): leaps += 1
+        return count_leaps(year2) - count_leaps(year1) # O(1) implementation
+
+# Run the program (should be all true):
+# print(leaps(2016, 2017) == 1)
+# print(leaps(2019, 2017) == None)
+# print(leaps(1900, 1901) == 0)
+# print(leaps(2000, 2001) == 1)
+# print(leaps(123456, 123456) == 0)
+# print(leaps(1234, 5678) == 1077)
+# print(leaps(123456789101112, 1314151617181920) == 288412747246241)
+
+# ------------------------------------------------------------------
 ##  Challenge #377 [Easy] Axis-aligned crate packing
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/bazy5j/20190408_challenge_377_easy_axisaligned_crate/
 
 def fit1(X, Y, x, y):
     return int(X / x) * int(Y / y)
 
-# Run the program:
+# Run the program (should be all true):
 # print(fit1(25, 18, 6, 5) == 12)
 # print(fit1(10, 10, 1, 1) == 100)
 # print(fit1(12, 34, 5, 6) == 10)
@@ -15,7 +98,7 @@ def fit1(X, Y, x, y):
 def fit2(X, Y, x, y):
     return max(fit1(X, Y, x, y), fit1(X, Y, y, x))
 
-# Run the program:
+# Run the program (should be all true):
 # print(fit2(25, 18, 6, 5) == 15)
 # print(fit2(12, 34, 5, 6) == 12)
 # print(fit2(12345, 678910, 1112, 1314) == 5676)
@@ -26,15 +109,14 @@ def fit2(X, Y, x, y):
 from itertools import permutations
 def fit3(X, Y, Z, x, y, z):
     b_dim = [x, y, z]
-    boxes = list(permutations(b_dim))
     results = []
-    for box in boxes:
+    for box in list(permutations(b_dim)):
         perm = fit2(X, Y, box[0], box[1]) * (int(Z / box[2]))
         results.append(perm)
     return max(results)
 # since fitN works, you can just use fixN here if you'd like
 
-# Run the program:
+# Run the program (should be all true):
 # print(fit3(10, 10, 10, 1, 1, 1) == 1000)
 # print(fit3(12, 34, 56, 7, 8, 9) == 32)
 # print(fit3(123, 456, 789, 10, 11, 12) == 32604)
@@ -49,9 +131,10 @@ def fitN(crate_dim, box_dim):
             fit *= crate_dim[index] // dim
         result = max(fit, result) # update result for each permutation (find greatest value)
     return result
-# Run the program:
-print(fitN([12, 34, 56], [7, 8, 9]) == 32)
-print(fitN([123, 456, 789, 1011, 1213, 1415], [16, 17, 18, 19, 20, 21]) == 1883443968)
+
+# Run the program (should be all true):
+# print(fitN([12, 34, 56], [7, 8, 9]) == 32)
+# print(fitN([123, 456, 789, 1011, 1213, 1415], [16, 17, 18, 19, 20, 21]) == 1883443968)
 
 # ------------------------------------------------------------------
 ##  Challenge #378 [Easy] The Havel-Hakimi algorithm for graph realization
@@ -83,8 +166,8 @@ def hh(seq):
             # print("dec by 1: %s" % seq)
     return True
 
-# Run the program: if 'not' appears before the sequence,
-# it means that the terminal should print true, meaning the sequence itself is false (not false is true)
+# Run the program (should be all true): Note - if 'not' appears before the sequence,
+# it means that the sequence by itself is False (not false is true) since everything should print True
 # print(not hh([5, 3, 0, 2, 6, 2, 0, 7, 2, 5]))
 # print(not hh([4, 2, 0, 1, 5, 0]))
 # print(hh([3, 1, 2, 3, 1, 0]))
@@ -122,7 +205,7 @@ def tax(income):
             income -= deductible
     return int(total_tax)
 
-# Run the program
+# Run the program (should be all true):
 # print(tax(12000) == 200)
 # print(tax(56789) == 8697)
 # print(tax(1234567) == 473326)
@@ -234,7 +317,7 @@ def prime(number): # check if a number is prime
         if (number % i == 0): return False
     return True
 
-# Test:
+# Test (should be all true when you run it):
 # print(prime(1) == False)
 # print(prime(2) == True)
 # print(prime(19) == True)

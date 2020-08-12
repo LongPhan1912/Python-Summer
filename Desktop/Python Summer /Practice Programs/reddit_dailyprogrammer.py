@@ -1,4 +1,92 @@
 # ------------------------------------------------------------------
+##  Challenge #374 [Easy] Additive Persistence
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/akv6z4/20190128_challenge_374_easy_additive_persistence/
+
+def add_every_digit(num):
+    sum = 0
+    while num > 0:
+        sum += num % 10 # help get last digit
+        num //= 10 # eliminate last digit
+    return sum
+
+def additive_persistence(num):
+    iter = 0
+    while num >= 10:
+        num = add_every_digit(num)
+        iter += 1
+    return iter
+
+# Run the program (should all be true):
+# print(additive_persistence(13) == 1)
+# print(additive_persistence(199) == 3)
+# print(additive_persistence(1234) == 2)
+# print(additive_persistence(9876) == 2)
+
+# ------------------------------------------------------------------
+##  Challenge #374 [Hard] Nonogram Solver
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/am1x6o/20190201_challenge_374_hard_nonogram_solver/
+
+def draw_board(columns, rows):
+    grid = []
+    for row in range(rows):
+        grid.append([])
+        for column in range(columns):
+            grid[row].append(' ')
+    return grid
+
+def draw_rows(input, row, grid):
+    max_col = 0
+    for row_idx, elem in enumerate(input):
+        elems = elem.split(',')
+        if int(elems[0]) > max_col: max_col = int(elems[0])
+        for col_idx in range(int(elems[0])):
+            grid[row_idx][col_idx] = '*'
+        if len(elems) > 1:
+            for i in range(1, len(elems)):
+                start_pos = int(elems[i])
+                # print(start_pos, row_idx, col_idx)
+                for col_idx in range(max_col - start_pos, max_col):
+                    # print(start_pos, row_idx, col_idx)
+                    grid[row_idx][col_idx] = '*'
+
+    for i in range(row): print(''.join(grid[i]))
+    return grid
+
+def draw_columns(input, grid):
+    max_row = 0
+    for col_idx, elem in enumerate(input): # 0,1,2,3,4
+        # print(col_idx)
+        elems = elem.split(',')
+        if int(elems[0]) > max_row: max_row = int(elems[0])
+        for row_idx in range(int(elems[0])):
+            # print(elems[0], row_idx, col_idx)
+            grid[row_idx][col_idx] = '*'
+        if len(elems) > 1:
+            for i in range(1, len(elems)):
+                start_pos = int(elems[i])
+                for row_idx in range(max_row - start_pos, max_row):
+                    grid[row_idx][col_idx] = '*'
+
+    for i in range(max_row): print(''.join(grid[i]))
+    return grid
+
+def draw_nonogram(num_col, num_rows, col_input, row_input):
+    grid = draw_board(num_col, num_rows)
+    # draw_columns(col_input, grid)
+    # print('\n'+'------------------------'+'\n')
+    draw_rows(row_input, num_rows, grid)
+    return grid
+
+
+# draw_nonogram(5, 5, ["5","2,2","1,1","2,2","5"], ["5","2,2","1,1","2,2","5"])
+# draw_nonogram(8, 11, ["0","9","9","2,2","2,2","4","4","0"], ["0","4","6","2,2","2,2","6","4","2","2","2","0"])
+draw_nonogram(30, 20,
+["1","1","2","4","7","9","2,8","1,8","8","1,9","2,7","3,4","6,4","8,5","1,11",
+"1,7","8","1,4,8","6,8","4,7","2,4","1,4","5","1,4","1,5","7","5","3","1","1"],
+["8,7,5,7","5,4,3,3","3,3,2,3","4,3,2,2","3,3,2,2","3,4,2,2","4,5,2","3,5,1",
+"4,3,2","3,4,2","4,4,2","3,6,2","3,2,3,1","4,3,4,2","3,2,3,2","6,5","4,5","3,3","3,3","1,1"])
+
+# ------------------------------------------------------------------
 ##  Challenge #375 [Easy] Print a new number by adding one to each of its digit
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/aphavc/20190211_challenge_375_easy_print_a_new_number_by/
 
@@ -13,7 +101,9 @@ def plus_one_to_digit(num):
         else: extra = 0
         remains = (remains - digit) // 10 # 1st loop: 99, 2nd loop: 9
     return result
-print(plus_one_to_digit(998))
+
+# Run the program (should return True):
+# print(plus_one_to_digit(998) == 10109)
 
 # ------------------------------------------------------------------
 ##  Challenge #375 [Intermediate] A Card Flipping Game
@@ -38,7 +128,7 @@ def card_flip(str, steps):
             if char == '1':
                 steps.append(i)
                 return card_flip(remove_card(str, i), steps)
-
+    # return the steps if all cards are flipped
     return steps if str.count('.') == len(str) else 'no solution'
 
 # Run the program (should all be true):
@@ -212,7 +302,7 @@ def tax(income):
 
 def get_income(tax_rate):
     tax_rate = round(tax_rate, 4)
-    hi = 1000000000 - 1
+    hi = 100000000 - 1
     lo = 0
     result = 0
     # use binary search: O(log(n))

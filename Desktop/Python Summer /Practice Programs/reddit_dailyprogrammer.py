@@ -2,6 +2,31 @@ import unittest
 import random
 
 # ------------------------------------------------------------------
+##  Challenge #370 [Easy] UPC check digits
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/ab9mn7/20181231_challenge_371_easy_n_queens_validator/
+def upc_check_digit(code_str):
+    sum_even = 0
+    sum_odd = 0
+    for i, d in enumerate(code_str):
+        digit = int(d)
+        if i % 2 == 0:
+            sum_even += digit
+        else: sum_odd += digit
+    remainder = (sum_even*3 + sum_odd) % 10
+    return 10 - remainder
+
+class UPCTest(unittest.TestCase):
+    def test_upc(self):
+        self.assertTrue(upc_check_digit('03600029145'), 2)
+        self.assertTrue(upc_check_digit('4210000526'), 4)
+        self.assertTrue(upc_check_digit('3600029145'), 2)
+        self.assertTrue(upc_check_digit('12345678910'), 4)
+        self.assertTrue(upc_check_digit('1234567'), 0)
+
+# if __name__ == "__main__":
+#     unittest.main(UPCTest())
+
+# ------------------------------------------------------------------
 ##  Challenge #371 [Easy] N queens validator
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/ab9mn7/20181231_challenge_371_easy_n_queens_validator/
 def q_check(s_list):

@@ -3,7 +3,7 @@ import random
 
 # ------------------------------------------------------------------
 ##  Challenge #370 [Easy] UPC check digits
-# Link: https://www.reddit.com/r/dailyprogrammer/comments/ab9mn7/20181231_challenge_371_easy_n_queens_validator/
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/a72sdj/20181217_challenge_370_easy_upc_check_digits/
 def upc_check_digit(code_str):
     sum_even = 0
     sum_odd = 0

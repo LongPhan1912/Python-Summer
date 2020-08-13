@@ -1,3 +1,92 @@
+import unittest
+import random
+
+# ------------------------------------------------------------------
+##  Challenge #371 [Easy] N queens validator
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/ab9mn7/20181231_challenge_371_easy_n_queens_validator/
+def q_check(s_list):
+    for idx1, val1 in enumerate(s_list):
+        for idx2, val2 in enumerate(s_list):
+            if idx1 == idx2: continue
+            if val1 == val2:
+                # print(val1, val2)
+                return False
+            if abs(val1 - val2) == abs(idx1 - idx2):
+                # print(val1, val2, idx1, idx2)
+                return False
+    return True
+
+def q_fix(old_list):
+    for i in range(len(old_list)):
+        for j in range(len(old_list)):
+            if i == j: continue
+            new_list = old_list[:]
+            # swap the first element with any other element in the list until the queen check is satisfied
+            # if first element does not work, then move to second element and so on
+            new_list[i], new_list[j] = new_list[j], new_list[i]
+            if q_check(new_list): return new_list
+    return False
+
+class QueenTest(unittest.TestCase):
+    # The simplest TestCase subclass will simply implement a test method (i.e. a method whose name starts with test)
+    def test_queen(self):
+        self.assertTrue(q_check([4, 2, 7, 3, 6, 8, 5, 1]))
+        self.assertTrue(q_check([2, 5, 7, 4, 1, 8, 6, 3]))
+        self.assertFalse(q_check([5, 3, 1, 4, 2, 8, 6, 3]))
+        self.assertFalse(q_check([5, 8, 2, 4, 7, 1, 3, 6]))
+        self.assertFalse(q_check([4, 3, 1, 8, 1, 3, 5, 2]))
+
+    def test_queen_fix(self):
+        self.assertEqual(q_fix([8, 6, 4, 2, 7, 1, 3, 5]), [4, 6, 8, 2, 7, 1, 3, 5])
+        self.assertEqual(q_fix([8, 5, 1, 3, 6, 2, 7, 4]), [8, 4, 1, 3, 6, 2, 7, 5])
+        self.assertEqual(q_fix([4, 6, 8, 3, 1, 2, 5, 7]), [4, 6, 8, 3, 1, 7, 5, 2])
+        self.assertEqual(q_fix([7, 1, 3, 6, 8, 5, 2, 4]), [7, 3, 1, 6, 8, 5, 2, 4])
+
+# if __name__ == "__main__":
+#     unittest.main(QueenTest())
+
+# ------------------------------------------------------------------
+##  Challenge #372 [Easy] Perfectly balanced
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/afxxca/20190114_challenge_372_easy_perfectly_balanced/
+def balanced(str):
+    return str.count('x') == str.count('y')
+
+def balanced_bonus(str):
+    char_dict = dict()
+    for char in str:
+        char_dict[char] = char_dict.get(char, 0) + 1
+
+    compare = 0
+    for char in char_dict:
+        if compare == 0:
+            compare = char_dict[char]
+            continue
+        if char_dict[char] != compare:
+            return False
+    return True
+
+class BalancedTest(unittest.TestCase):
+    def test_balanced(self):
+        self.assertTrue(balanced("xxxyyy"))
+        self.assertFalse(balanced("xxxyyyy"))
+        self.assertTrue(balanced(""))
+        self.assertFalse(balanced("x"))
+        self.assertTrue(balanced("yyxyxxyxxyyyyxxxyxyx"))
+        self.assertFalse(balanced("xyxxxxyyyxyxxyxxyy"))
+
+    def test_balanced_bonus(self):
+        self.assertTrue(balanced_bonus("xxxyyyzzz"))
+        self.assertTrue(balanced_bonus("abccbaabccba"))
+        self.assertTrue(balanced_bonus("xxxyyy"))
+        self.assertTrue(balanced_bonus("abcdefghijklmnopqrstuvwxyz"))
+        self.assertFalse(balanced_bonus("pqq"))
+        self.assertFalse(balanced_bonus("fdedfdeffeddefeeeefddf"))
+        self.assertTrue(balanced_bonus("x"))
+        self.assertTrue(balanced_bonus(""))
+
+# if __name__ == "__main__":
+#     unittest.main(BalancedTest())
+
 # ------------------------------------------------------------------
 ##  Challenge #374 [Easy] Additive Persistence
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/akv6z4/20190128_challenge_374_easy_additive_persistence/
@@ -16,75 +105,80 @@ def additive_persistence(num):
         iter += 1
     return iter
 
-# Run the program (should all be true):
-# print(additive_persistence(13) == 1)
-# print(additive_persistence(199) == 3)
-# print(additive_persistence(1234) == 2)
-# print(additive_persistence(9876) == 2)
+class AdditivePersistenceTest(unittest.TestCase):
+    def test_ap(self):
+        self.assertEqual(additive_persistence(13), 1)
+        self.assertEqual(additive_persistence(199), 3)
+        self.assertEqual(additive_persistence(1234), 2)
+        self.assertEqual(additive_persistence(9876), 2)
+
+# if __name__ == "__main__":
+#     unittest.main(AdditivePersistenceTest())
 
 # ------------------------------------------------------------------
 ##  Challenge #374 [Hard] Nonogram Solver
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/am1x6o/20190201_challenge_374_hard_nonogram_solver/
 
-def draw_board(columns, rows):
-    grid = []
-    for row in range(rows):
-        grid.append([])
-        for column in range(columns):
-            grid[row].append(' ')
-    return grid
-
-def draw_rows(input, row, grid):
-    max_col = 0
-    for row_idx, elem in enumerate(input):
-        elems = elem.split(',')
-        if int(elems[0]) > max_col: max_col = int(elems[0])
-        for col_idx in range(int(elems[0])):
-            grid[row_idx][col_idx] = '*'
-        if len(elems) > 1:
-            for i in range(1, len(elems)):
-                start_pos = int(elems[i])
-                # print(start_pos, row_idx, col_idx)
-                for col_idx in range(max_col - start_pos, max_col):
-                    # print(start_pos, row_idx, col_idx)
-                    grid[row_idx][col_idx] = '*'
-
-    for i in range(row): print(''.join(grid[i]))
-    return grid
-
-def draw_columns(input, grid):
-    max_row = 0
-    for col_idx, elem in enumerate(input): # 0,1,2,3,4
-        # print(col_idx)
-        elems = elem.split(',')
-        if int(elems[0]) > max_row: max_row = int(elems[0])
-        for row_idx in range(int(elems[0])):
-            # print(elems[0], row_idx, col_idx)
-            grid[row_idx][col_idx] = '*'
-        if len(elems) > 1:
-            for i in range(1, len(elems)):
-                start_pos = int(elems[i])
-                for row_idx in range(max_row - start_pos, max_row):
-                    grid[row_idx][col_idx] = '*'
-
-    for i in range(max_row): print(''.join(grid[i]))
-    return grid
-
-def draw_nonogram(num_col, num_rows, col_input, row_input):
-    grid = draw_board(num_col, num_rows)
-    # draw_columns(col_input, grid)
-    # print('\n'+'------------------------'+'\n')
-    draw_rows(row_input, num_rows, grid)
-    return grid
+# most of this is hard-coded, so only works for the first image.
+# def draw_board(columns, rows):
+#     grid = []
+#     for row in range(rows):
+#         grid.append([])
+#         for column in range(columns):
+#             grid[row].append(' ')
+#     return grid
+#
+# def draw_rows(input, row, grid):
+#     max_col = 0
+#     for row_idx, elem in enumerate(input):
+#         elems = elem.split(',')
+#         if int(elems[0]) > max_col: max_col = int(elems[0])
+#         for col_idx in range(int(elems[0])):
+#             grid[row_idx][col_idx] = '*'
+#         if len(elems) > 1:
+#             for i in range(1, len(elems)):
+#                 start_pos = int(elems[i])
+#                 # print(start_pos, row_idx, col_idx)
+#                 for col_idx in range(max_col - start_pos, max_col):
+#                     # print(start_pos, row_idx, col_idx)
+#                     grid[row_idx][col_idx] = '*'
+#
+#     for i in range(row): print(''.join(grid[i]))
+#     return grid
+#
+# def draw_columns(input, grid):
+#     max_row = 0
+#     for col_idx, elem in enumerate(input): # 0,1,2,3,4
+#         # print(col_idx)
+#         elems = elem.split(',')
+#         if int(elems[0]) > max_row: max_row = int(elems[0])
+#         for row_idx in range(int(elems[0])):
+#             # print(elems[0], row_idx, col_idx)
+#             grid[row_idx][col_idx] = '*'
+#         if len(elems) > 1:
+#             for i in range(1, len(elems)):
+#                 start_pos = int(elems[i])
+#                 for row_idx in range(max_row - start_pos, max_row):
+#                     grid[row_idx][col_idx] = '*'
+#
+#     for i in range(max_row): print(''.join(grid[i]))
+#     return grid
+#
+# def draw_nonogram(num_col, num_rows, col_input, row_input):
+#     grid = draw_board(num_col, num_rows)
+#     # draw_columns(col_input, grid)
+#     # print('\n'+'------------------------'+'\n')
+#     draw_rows(row_input, num_rows, grid)
+#     return grid
 
 
 # draw_nonogram(5, 5, ["5","2,2","1,1","2,2","5"], ["5","2,2","1,1","2,2","5"])
 # draw_nonogram(8, 11, ["0","9","9","2,2","2,2","4","4","0"], ["0","4","6","2,2","2,2","6","4","2","2","2","0"])
-draw_nonogram(30, 20,
-["1","1","2","4","7","9","2,8","1,8","8","1,9","2,7","3,4","6,4","8,5","1,11",
-"1,7","8","1,4,8","6,8","4,7","2,4","1,4","5","1,4","1,5","7","5","3","1","1"],
-["8,7,5,7","5,4,3,3","3,3,2,3","4,3,2,2","3,3,2,2","3,4,2,2","4,5,2","3,5,1",
-"4,3,2","3,4,2","4,4,2","3,6,2","3,2,3,1","4,3,4,2","3,2,3,2","6,5","4,5","3,3","3,3","1,1"])
+# draw_nonogram(30, 20,
+# ["1","1","2","4","7","9","2,8","1,8","8","1,9","2,7","3,4","6,4","8,5","1,11",
+# "1,7","8","1,4,8","6,8","4,7","2,4","1,4","5","1,4","1,5","7","5","3","1","1"],
+# ["8,7,5,7","5,4,3,3","3,3,2,3","4,3,2,2","3,3,2,2","3,4,2,2","4,5,2","3,5,1",
+# "4,3,2","3,4,2","4,4,2","3,6,2","3,2,3,1","4,3,4,2","3,2,3,2","6,5","4,5","3,3","3,3","1,1"])
 
 # ------------------------------------------------------------------
 ##  Challenge #375 [Easy] Print a new number by adding one to each of its digit
@@ -162,14 +256,18 @@ def leaps(year1, year2):
         #     if is_leap(year): leaps += 1
         return count_leaps(year2) - count_leaps(year1) # O(1) implementation
 
-# Run the program (should be all true):
-# print(leaps(2016, 2017) == 1)
-# print(leaps(2019, 2017) == None)
-# print(leaps(1900, 1901) == 0)
-# print(leaps(2000, 2001) == 1)
-# print(leaps(123456, 123456) == 0)
-# print(leaps(1234, 5678) == 1077)
-# print(leaps(123456789101112, 1314151617181920) == 288412747246241)
+class LeapYear(unittest.TestCase):
+    def test_leap(self):
+        self.assertEqual(leaps(2016, 2017), 1)
+        self.assertEqual(leaps(2019, 2017), None)
+        self.assertEqual(leaps(1900, 1901), 0)
+        self.assertEqual(leaps(2000, 2001), 1)
+        self.assertEqual(leaps(123456, 123456), 0)
+        self.assertEqual(leaps(1234, 5678), 1077)
+        self.assertEqual(leaps(123456789101112, 1314151617181920), 288412747246241)
+
+# if __name__ == "__main__":
+#     unittest.main(LeapYear())
 
 # ------------------------------------------------------------------
 ##  Challenge #377 [Easy] Axis-aligned crate packing
@@ -178,23 +276,8 @@ def leaps(year1, year2):
 def fit1(X, Y, x, y):
     return int(X / x) * int(Y / y)
 
-# Run the program (should be all true):
-# print(fit1(25, 18, 6, 5) == 12)
-# print(fit1(10, 10, 1, 1) == 100)
-# print(fit1(12, 34, 5, 6) == 10)
-# print(fit1(12345, 678910, 1112, 1314) == 5676)
-# print(fit1(5, 100, 6, 1) == 0)
-
 def fit2(X, Y, x, y):
     return max(fit1(X, Y, x, y), fit1(X, Y, y, x))
-
-# Run the program (should be all true):
-# print(fit2(25, 18, 6, 5) == 15)
-# print(fit2(12, 34, 5, 6) == 12)
-# print(fit2(12345, 678910, 1112, 1314) == 5676)
-# print(fit2(5, 5, 3, 2) == 2)
-# print(fit2(5, 100, 6, 1) == 80)
-# print(fit2(5, 5, 6, 1) == 0)
 
 from itertools import permutations
 def fit3(X, Y, Z, x, y, z):
@@ -206,12 +289,6 @@ def fit3(X, Y, Z, x, y, z):
     return max(results)
 # since fitN works, you can just use fixN here if you'd like
 
-# Run the program (should be all true):
-# print(fit3(10, 10, 10, 1, 1, 1) == 1000)
-# print(fit3(12, 34, 56, 7, 8, 9) == 32)
-# print(fit3(123, 456, 789, 10, 11, 12) == 32604)
-# print(fit3(1234567, 89101112, 13141516, 171819, 202122, 232425) == 174648)
-
 def fitN(crate_dim, box_dim):
     result = 0
     for box in list(permutations(box_dim)):
@@ -222,9 +299,30 @@ def fitN(crate_dim, box_dim):
         result = max(fit, result) # update result for each permutation (find greatest value)
     return result
 
-# Run the program (should be all true):
-# print(fitN([12, 34, 56], [7, 8, 9]) == 32)
-# print(fitN([123, 456, 789, 1011, 1213, 1415], [16, 17, 18, 19, 20, 21]) == 1883443968)
+class FitTest(unittest.TestCase):
+    def test_fit1(self):
+        self.assertEqual(fit1(25, 18, 6, 5), 12)
+        self.assertEqual(fit1(10, 10, 1, 1), 100)
+        self.assertEqual(fit1(12, 34, 5, 6), 10)
+        self.assertEqual(fit1(12345, 678910, 1112, 1314), 5676)
+        self.assertEqual(fit1(5, 100, 6, 1), 0)
+    def test_fit2(self):
+        self.assertEqual(fit2(25, 18, 6, 5), 15)
+        self.assertEqual(fit2(12, 34, 5, 6), 12)
+        self.assertEqual(fit2(5, 5, 3, 2), 2)
+        self.assertEqual(fit2(5, 100, 6, 1), 80)
+        self.assertEqual(fit2(5, 5, 6, 1), 0)
+    def test_fit3(self):
+        self.assertEqual(fit3(10, 10, 10, 1, 1, 1), 1000)
+        self.assertEqual(fit3(12, 34, 56, 7, 8, 9), 32)
+        self.assertEqual(fit3(123, 456, 789, 10, 11, 12), 32604)
+        self.assertEqual(fit3(1234567, 89101112, 13141516, 171819, 202122, 232425), 174648)
+    def test_fitN(self):
+        self.assertEqual(fitN([12, 34, 56], [7, 8, 9]), 32)
+        self.assertEqual(fitN([123, 456, 789, 1011, 1213, 1415], [16, 17, 18, 19, 20, 21]), 1883443968)
+
+# if __name__ == "__main__":
+#     unittest.main(FitTest())
 
 # ------------------------------------------------------------------
 ##  Challenge #378 [Easy] The Havel-Hakimi algorithm for graph realization
@@ -256,20 +354,23 @@ def hh(seq):
             # print("dec by 1: %s" % seq)
     return True
 
-# Run the program (should be all true): Note - if 'not' appears before the sequence,
-# it means that the sequence by itself is False (not false is true) since everything should print True
-# print(not hh([5, 3, 0, 2, 6, 2, 0, 7, 2, 5]))
-# print(not hh([4, 2, 0, 1, 5, 0]))
-# print(hh([3, 1, 2, 3, 1, 0]))
-# print(hh([16, 9, 9, 15, 9, 7, 9, 11, 17, 11, 4, 9, 12, 14, 14, 12, 17, 0, 3, 16]))
-# print(hh([14, 10, 17, 13, 4, 8, 6, 7, 13, 13, 17, 18, 8, 17, 2, 14, 6, 4, 7, 12]))
-# print(not hh([15, 18, 6, 13, 12, 4, 4, 14, 1, 6, 18, 2, 6, 16, 0, 9, 10, 7, 12, 3]))
-# print(not hh([6, 0, 10, 10, 10, 5, 8, 3, 0, 14, 16, 2, 13, 1, 2, 13, 6, 15, 5, 1]))
-# print(not hh([2, 2, 0]))
-# print(not hh([3, 2, 1]))
-# print(hh([1, 1]))
-# print(not hh([1]))
-# print(hh([]))
+class HavelHakimiTest(unittest.TestCase):
+    def test_hh(self):
+        self.assertFalse(hh([5, 3, 0, 2, 6, 2, 0, 7, 2, 5]))
+        self.assertFalse(hh([4, 2, 0, 1, 5, 0]))
+        self.assertTrue(hh([3, 1, 2, 3, 1, 0]))
+        self.assertTrue(hh([16, 9, 9, 15, 9, 7, 9, 11, 17, 11, 4, 9, 12, 14, 14, 12, 17, 0, 3, 16]))
+        self.assertTrue(hh([14, 10, 17, 13, 4, 8, 6, 7, 13, 13, 17, 18, 8, 17, 2, 14, 6, 4, 7, 12]))
+        self.assertFalse(hh([15, 18, 6, 13, 12, 4, 4, 14, 1, 6, 18, 2, 6, 16, 0, 9, 10, 7, 12, 3]))
+        self.assertFalse(hh([6, 0, 10, 10, 10, 5, 8, 3, 0, 14, 16, 2, 13, 1, 2, 13, 6, 15, 5, 1]))
+        self.assertFalse(hh([2, 2, 0]))
+        self.assertFalse(hh([3, 2, 1]))
+        self.assertFalse(hh([1]))
+        self.assertTrue(hh([]))
+        self.assertTrue(hh([1, 1]))
+
+# if __name__ == "__main__":
+#     unittest.main(HavelHakimiTest())
 
 # ------------------------------------------------------------------
 ## Challenge #379: [Easy] Progressive taxation
@@ -295,11 +396,6 @@ def tax(income):
             income -= deductible
     return int(total_tax)
 
-# Run the program (should be all true):
-# print(tax(12000) == 200)
-# print(tax(56789) == 8697)
-# print(tax(1234567) == 473326)
-
 def get_income(tax_rate):
     tax_rate = round(tax_rate, 4)
     hi = 100000000 - 1
@@ -318,10 +414,18 @@ def get_income(tax_rate):
             break
     return result
 
-# answer should be close to the provided comments
-# print(get_income(0.06)) # => 25000
-# print(get_income(0.09)) # => 34375
-# print(get_income(0.32)) # => 256250
+class TaxationTest(unittest.TestCase):
+    def test_tax(self):
+        self.assertEqual(tax(12000), 200)
+        self.assertEqual(tax(56789), 8697)
+        self.assertEqual(tax(1234567), 473326)
+    def test_income(self):
+        self.assertAlmostEqual(get_income(0.06), 25000, delta=100)
+        self.assertAlmostEqual(get_income(0.09), 34375, delta=100)
+        self.assertAlmostEqual(get_income(0.32), 256250, delta=100)
+
+# if __name__ == "__main__":
+#     unittest.main(TaxationTest())
 
 # ------------------------------------------------------------------
 ## Challenge #381: [Easy] Yahtzee Upper Section Scoring
@@ -334,18 +438,21 @@ def yahtzee_upper(sorted_int_list):
         d[key] = d.get(key, 0) + 1
         value = d[key]
         if max_result < key * value: max_result = key * value
-    print(max_result)
+    return max_result
 
-# Run the program:
-# yahtzee_upper([2, 3, 5, 5, 6]) # => 10
-# yahtzee_upper([1, 1, 1, 1, 3]) # => 4
-# yahtzee_upper([1, 1, 1, 3, 3]) # => 6
-# yahtzee_upper([1, 2, 3, 4, 5]) # => 5
-# yahtzee_upper([6, 6, 6, 6, 6]) # => 30
-#
-# yahtzee_upper([1654, 1654, 50995, 30864, 1654, 50995, 22747,
-#     1654, 1654, 1654, 1654, 1654, 30864, 4868, 1654, 4868, 1654,
-#     30864, 4868, 30864]) # => 123456
+class YahtzeeTest(unittest.TestCase):
+    def test_yahtzee(self):
+        self.assertEqual(yahtzee_upper([2, 3, 5, 5, 6]), 10)
+        self.assertEqual(yahtzee_upper([1, 1, 1, 1, 3]), 4)
+        self.assertEqual(yahtzee_upper([1, 1, 1, 3, 3]), 6)
+        self.assertEqual(yahtzee_upper([1, 2, 3, 4, 5]), 5)
+        self.assertEqual(yahtzee_upper([6, 6, 6, 6, 6]), 30)
+        self.assertEqual(yahtzee_upper([1654, 1654, 50995, 30864, 1654, 50995, 22747,
+        1654, 1654, 1654, 1654, 1654, 30864, 4868, 1654, 4868, 1654,
+        30864, 4868, 30864]), 123456)
+
+# if __name__ == "__main__":
+#     unittest.main(YahtzeeTest())
 
 # ------------------------------------------------------------------
 ## Challenge #383: [Easy] Necklace Matching
@@ -407,20 +514,10 @@ def prime(number): # check if a number is prime
         if (number % i == 0): return False
     return True
 
-# Test (should be all true when you run it):
-# print(prime(1) == False)
-# print(prime(2) == True)
-# print(prime(19) == True)
-# print(prime(49) == False)
-
 def product(iter):
     p = 1
     for i in iter: p *= i
     return p
-
-# Test:
-# print(product([1, 2, 3, 5])) # => 30
-# print(product([1, 8, 9])) # => 72
 
 def phi(num): # compute the phi value of a number
     primes = []
@@ -429,12 +526,7 @@ def phi(num): # compute the phi value of a number
         if prime(a) and (num % a == 0): primes.append(a)
     return num * (product([i - 1 for i in primes])) // (product(primes))
 
-# Test:
-# print(phi(12)) # => 4
-# print(phi(2)) # => 1
-# print(phi(15)) # => 8
-# print(phi(13)) # => 12
-# print(phi(11)) # => 10
+# Phi value of 2, 11, 12, 13, 15 should be 1, 10, 4, 12, and 8 respectively
 
 def factors(num):
     factor_list = []
@@ -444,29 +536,26 @@ def factors(num):
                 factor_list.append(i)
     return factor_list
 
-# Test:
-# print(factors(10)) # => [1, 2, 5, 10]
-# print(factors(49)) # => [1, 7, 49]
-
 def necklaces(k, n):
     result = 0
     for f in factors(n):
         result += phi(f) * k**(n // f)
     return result // n
 
+class NecklaceMatchingTest(unittest.TestCase):
+    def test_necklace(self):
+        self.assertEqual(necklaces(2, 12), 352)
+        self.assertEqual(necklaces(3, 7), 315)
+        self.assertEqual(necklaces(9, 4), 1665)
+        self.assertEqual(necklaces(21, 3), 3101)
+        self.assertEqual(necklaces(99, 2), 4950)
+        self.assertEqual(necklaces(3, 90), 96977372978752360287715019917722911297222)
+        self.assertEqual(necklaces(123, 18), 2306850769218800390268044415272597042)
+        self.assertEqual(necklaces(1234567, 6), 590115108867910855092196771880677924)
+        self.assertEqual(necklaces(12345678910, 3), 627225458787209496560873442940)
 
-# Test:
-# Easy examples
-# print(necklaces(2, 12) == 352)
-# print(necklaces(3, 7) == 315)
-# print(necklaces(9, 4) == 1665)
-# print(necklaces(21, 3) == 3101)
-# print(necklaces(99, 2) == 4950)
-# Harder examples
-# print(necklaces(3, 90) == 96977372978752360287715019917722911297222)
-# print(necklaces(123, 18) == 2306850769218800390268044415272597042)
-# print(necklaces(1234567, 6) == 590115108867910855092196771880677924)
-# print(necklaces(12345678910, 3) == 627225458787209496560873442940)
+# if __name__ == "__main__":
+#     unittest.main(NecklaceMatchingTest())
 
 # ------------------------------------------------------------------
 ## Challenge #385: [Intermediate] Necklace Matching
@@ -494,7 +583,6 @@ def solve(series, x):
     t = flip(series, y)
     return prisoner2(t) == x
 
-import random
 def main():
     # create a series of 64 bits and a number from 0 to 63
     series = [random.randint(0, 1) for i in range(64)]

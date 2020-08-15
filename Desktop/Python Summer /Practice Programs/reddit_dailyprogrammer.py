@@ -3,33 +3,37 @@ import random
 import math
 
 # ------------------------------------------------------------------
+##  Challenge #367 [Easy] Subfactorials - Another Twist on Factorials
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/9cvo0f/20180904_challenge_367_easy_subfactorials_another/
+def factorial(n):
+    if n <= 1: return 1
+    return n * factorial(n - 1)
+
+def subfactorials(n): # this follows the formula given by Wolfram: https://mathworld.wolfram.com/Subfactorial.html
+    sum = 0
+    for k in range(n+1):
+        diff = n - k
+        sum += (factorial(n) * (-1)**diff) / factorial(diff)
+    return int(sum)
+
+def derangement(n): # this follows the recursive formula from: https://en.wikipedia.org/wiki/Derangement
+    if n == 0: return 1
+    if n == 1: return 0
+    return (n - 1) * (derangement(n - 2) + derangement(n - 1))
+
+# ------------------------------------------------------------------
 ##  Challenge #368 [Intermediate] Single-symbol squares
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/9z3mjk/20181121_challenge_368_intermediate_singlesymbol/
 
-def switch_choice(char):
-    switch_dict = {'X':'O', 'O':'X'}
-    return switch_dict[char]
-
-def switch_cell(grid, possible_y, possible_x):
-    new_x = random.choice(possible_x)
-    new_y = random.choice(possible_y)
-    grid[new_y][new_x] = switch_choice(grid[new_y][new_x])
-
-def max_of_3(a, b, c):
-    if a >= b and a >= c: return a
-    elif b >= a and b >= c: return b
-    else: return c
-
-def make_grid(size):
-    # horrible space complexity, but it works
-    # time complexity: (O(n^2) + O(2*n^3) + O(n)) = O(n^3)
+def random_grid(size):
     grid = []
     for y in range(size):
         grid.append([])
         for x in range(size):
-            grid[y].append('O')
+            grid[y].append(random.choice(['X', 'O']))
+    return grid
 
-    # check from left to right
+def check_grid(grid, size):
     for y in range(size):
         for x in range(size):
             dist = min(size - x, size - y)
@@ -38,44 +42,24 @@ def make_grid(size):
                 ne = grid[y][x + i]
                 se = grid[y + i][x + i]
                 sw = grid[y + i][x]
-                if nw == ne == se == sw:
-                    switch_cell(grid, [y, y + i], [x, x + i])
+                if nw == ne and ne == se and se == sw:
+                    return False
+    return True
 
-    print('first')
-    for s in range(size):
-        print(' '.join(grid[s]))
-    print('\n')
-    # check from right to left
-    mid = math.ceil(size / 2) - 1
-    dist = 0
-    for y in range(size):
-        for x in range(size - 1, -1, -1):
-            # print(y, x)
-            if y == mid:
-                if y > x: dist = x # find half of the whole distance
-                else: dist = y # do if else so to have O(1) implementation
-            elif y > mid: dist = size - 1 - y # height from bottom to y
-            else: dist = max_of_3(y, x, abs(x - y)) # e.g. at (1, 4), y is 1, x is 4, abs(x - y) equals 3
-
-            for i in range(1, dist):
-                ne = grid[y][x]
-                nw = grid[y][x - i]
-                sw = grid[y + i][x - i]
-                se = grid[y + i][x]
-                print((y, x), (y, x - i), (y + i, x - i), (y + i, x))
-                if nw == ne == se == sw:
-                    # print((y, x), (y, x - i), (y + i, x - i), (y + i, x))
-                    switch_cell(grid, [y, y + i], [x, x - i])
-                    print('update:')
-                    for s in range(size):
-                        print(' '.join(grid[s]))
-                    print('\n')
+def make_grid(size): # O(n^4) solution
+    count = 0
+    grid = random_grid(size)
+    while True:
+        count += 1
+        if check_grid(grid, size): break
+        else: grid = random_grid(size)
 
     for s in range(size):
         print(' '.join(grid[s]))
-    return grid
 
-make_grid(5)
+    print('total iterations: %s' % count)
+
+# make_grid(3) # can go up to 7 with 0.48s; stops at 8
 
 # ------------------------------------------------------------------
 ##  Challenge #369 [Easy] Hex colors

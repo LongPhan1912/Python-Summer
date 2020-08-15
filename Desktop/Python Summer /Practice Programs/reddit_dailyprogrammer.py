@@ -1,5 +1,110 @@
 import unittest
 import random
+import math
+
+# ------------------------------------------------------------------
+##  Challenge #368 [Intermediate] Single-symbol squares
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/9z3mjk/20181121_challenge_368_intermediate_singlesymbol/
+
+def switch_choice(char):
+    switch_dict = {'X':'O', 'O':'X'}
+    return switch_dict[char]
+
+def switch_cell(grid, possible_y, possible_x):
+    new_x = random.choice(possible_x)
+    new_y = random.choice(possible_y)
+    grid[new_y][new_x] = switch_choice(grid[new_y][new_x])
+
+def max_of_3(a, b, c):
+    if a >= b and a >= c: return a
+    elif b >= a and b >= c: return b
+    else: return c
+
+def make_grid(size):
+    # horrible space complexity, but it works
+    # time complexity: (O(n^2) + O(2*n^3) + O(n)) = O(n^3)
+    grid = []
+    for y in range(size):
+        grid.append([])
+        for x in range(size):
+            grid[y].append('O')
+
+    # check from left to right
+    for y in range(size):
+        for x in range(size):
+            dist = min(size - x, size - y)
+            for i in range(1, dist):
+                nw = grid[y][x]
+                ne = grid[y][x + i]
+                se = grid[y + i][x + i]
+                sw = grid[y + i][x]
+                if nw == ne == se == sw:
+                    switch_cell(grid, [y, y + i], [x, x + i])
+
+    print('first')
+    for s in range(size):
+        print(' '.join(grid[s]))
+    print('\n')
+    # check from right to left
+    mid = math.ceil(size / 2) - 1
+    dist = 0
+    for y in range(size):
+        for x in range(size - 1, -1, -1):
+            # print(y, x)
+            if y == mid:
+                if y > x: dist = x # find half of the whole distance
+                else: dist = y # do if else so to have O(1) implementation
+            elif y > mid: dist = size - 1 - y # height from bottom to y
+            else: dist = max_of_3(y, x, abs(x - y)) # e.g. at (1, 4), y is 1, x is 4, abs(x - y) equals 3
+
+            for i in range(1, dist):
+                ne = grid[y][x]
+                nw = grid[y][x - i]
+                sw = grid[y + i][x - i]
+                se = grid[y + i][x]
+                print((y, x), (y, x - i), (y + i, x - i), (y + i, x))
+                if nw == ne == se == sw:
+                    # print((y, x), (y, x - i), (y + i, x - i), (y + i, x))
+                    switch_cell(grid, [y, y + i], [x, x - i])
+                    print('update:')
+                    for s in range(size):
+                        print(' '.join(grid[s]))
+                    print('\n')
+
+    for s in range(size):
+        print(' '.join(grid[s]))
+    return grid
+
+make_grid(5)
+
+# ------------------------------------------------------------------
+##  Challenge #369 [Easy] Hex colors
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/a0lhxx/20181126_challenge_369_easy_hex_colors/
+dex_hex = {10:'A', 11:'B', 12:'C', 13:'D', 14:'E', 15:'F'}
+
+def dec_to_hex(dec):
+    hex_list=[]
+    while len(hex_list) < 2:
+        rem = dec % 16
+        to_add = str(rem)
+        if rem >= 10: to_add = dex_hex[rem]
+        hex_list.append(to_add)
+        dec //= 16
+
+    return ''.join(reversed(hex_list))
+
+def hexcolour(red, green, blue):
+    return '#'+dec_to_hex(red)+dec_to_hex(green)+dec_to_hex(blue)
+
+class HexTest(unittest.TestCase):
+    def test_hexcolours(self):
+        self.assertEqual(hexcolour(255, 99, 71), "#FF6347")
+        self.assertEqual(hexcolour(184, 134, 11), "#B8860B")
+        self.assertEqual(hexcolour(189, 183, 107), "#BDB76B")
+        self.assertEqual(hexcolour(0, 0, 205), "#0000CD")
+
+# if __name__ == "__main__":
+#     unittest.main(HexTest())
 
 # ------------------------------------------------------------------
 ##  Challenge #370 [Easy] UPC check digits

@@ -1,6 +1,24 @@
 import unittest
 import random
 import math
+import operator
+
+# ------------------------------------------------------------------
+##  Challenge #361 [Easy] Tally Program
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8jcffg/20180514_challenge_361_easy_tally_program/
+def tally_ho(str):
+    tally_dict = dict()
+    for char in str:
+        if char.islower():
+            tally_dict[char] = tally_dict.get(char, 0) + 1
+        if char.isupper():
+            dec = char.lower()
+            tally_dict[dec] = tally_dict.get(dec, 0) - 1
+
+    return {k: v for k, v in sorted(tally_dict.items(), key=lambda item: item[1], reverse=True)}
+
+# print(tally_ho('dbbaCEDbdAacCEAadcB'))
+# print(tally_ho('EbAAdbBEaBaaBBdAccbeebaec'))
 
 # ------------------------------------------------------------------
 ##  Challenge #367 [Easy] Subfactorials - Another Twist on Factorials
@@ -20,6 +38,85 @@ def derangement(n): # this follows the recursive formula from: https://en.wikipe
     if n == 0: return 1
     if n == 1: return 0
     return (n - 1) * (derangement(n - 2) + derangement(n - 1))
+
+# ------------------------------------------------------------------
+##  Challenge #367 [Hard] The Mondrian Puzzle
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/9dv08q/20180907_challenge_367_hard_the_mondrian_puzzle/
+def all_rectangles(n):
+    rectangles = [(1, 1, 1)]
+    for i in range(1, n+1):
+        for j in range(1, n+1):
+            if i == n and j == n: break
+            if (i, j, i*j) not in rectangles and (j, i, j*i) not in rectangles:
+                rectangles.append((i, j, i*j))
+    return rectangles
+
+def make_canvas(r_set, n):
+    # base case
+    if n <= 2: return None
+    combos = []
+    diff = 0
+    total_area = 0
+    target_area = n**2
+    while total_area != target_area:
+        random_area = random.choice(r_set)
+        if random_area not in combos:
+            combos.append(random_area)
+            total_area += random_area[2]
+        combos.sort()
+        
+        r_num = len(combos)
+        if r_num > 1:
+            biggest = combos[r_num - 1][2]
+            smallest = combos[0][2]
+            diff = biggest - smallest
+
+        if total_area > target_area:
+            combos.clear()
+            perimeter = 0
+            total_area = 0
+            diff = 0
+            continue
+
+    return diff, combos
+
+print(make_canvas(all_rectangles(3), 3))
+
+def solve_mondrian(n):
+    diff, combos = make_canvas(all_rectangles(n), n)
+    min = n**2
+    all_diff = list()
+    all_combos = list()
+    idx = 0
+    access = 0
+
+    while combos not in all_combos or diff not in all_diff:
+        all_diff.append(diff)
+        all_combos.append(combos)
+        if min > diff:
+            min = diff
+            access = idx
+        diff, combos = make_canvas(all_rectangles(n), n)
+        idx += 1
+
+    # print(all_combos[access], min)
+    return all_combos[access], min
+
+def solve_mondrian_5_times(n):
+    abs_min = n**2
+    abs_combo = list()
+    for i in range(5):
+        combo, diff = solve_mondrian(n)
+        print(diff)
+        if diff < abs_min:
+            abs_min = diff
+            abs_combo = combo
+
+    print('5 times:')
+    print(abs_combo, abs_min)
+
+# solve_mondrian_5_times(4)
+
 
 # ------------------------------------------------------------------
 ##  Challenge #368 [Intermediate] Single-symbol squares
@@ -59,7 +156,7 @@ def make_grid(size): # O(n^4) solution
 
     print('total iterations: %s' % count)
 
-# make_grid(3) # can go up to 7 with 0.48s; stops at 8
+# make_grid(3) # can go up to 7 with 0.48s; stops at 8 (no response)
 
 # ------------------------------------------------------------------
 ##  Challenge #369 [Easy] Hex colors

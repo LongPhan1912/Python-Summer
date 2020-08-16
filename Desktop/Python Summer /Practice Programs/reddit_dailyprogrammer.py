@@ -43,33 +43,30 @@ def derangement(n): # this follows the recursive formula from: https://en.wikipe
 ##  Challenge #367 [Hard] The Mondrian Puzzle
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/9dv08q/20180907_challenge_367_hard_the_mondrian_puzzle/
 def all_rectangles(n):
-    rectangles = [(1, 1, 1)]
-    for i in range(1, n+1):
+    rectangles = list()
+    for i in range(1, n):
         for j in range(1, n+1):
-            if i == n and j == n: break
-            if (i, j, i*j) not in rectangles and (j, i, j*i) not in rectangles:
-                rectangles.append((i, j, i*j))
+            if j >= i: rectangles.append((i, j, i*j))
     return rectangles
 
-def make_canvas(r_set, n):
+def make_canvas(n):
     # base case
     if n <= 2: return None
+
+    rectangle_set = all_rectangles(n)
     combos = []
     diff = 0
     total_area = 0
     target_area = n**2
+
     while total_area != target_area:
-        random_area = random.choice(r_set)
+        random_area = random.choice(rectangle_set)
         if random_area not in combos:
             combos.append(random_area)
             total_area += random_area[2]
-        combos.sort()
-        
-        r_num = len(combos)
-        if r_num > 1:
-            biggest = combos[r_num - 1][2]
-            smallest = combos[0][2]
-            diff = biggest - smallest
+
+        areas = [c[2] for c in combos]
+        diff = max(areas) - min(areas)
 
         if total_area > target_area:
             combos.clear()
@@ -80,43 +77,42 @@ def make_canvas(r_set, n):
 
     return diff, combos
 
-print(make_canvas(all_rectangles(3), 3))
 
 def solve_mondrian(n):
-    diff, combos = make_canvas(all_rectangles(n), n)
+    diff, combos = make_canvas(n)
     min = n**2
     all_diff = list()
     all_combos = list()
     idx = 0
     access = 0
 
-    while combos not in all_combos or diff not in all_diff:
+    while combos not in all_combos:
         all_diff.append(diff)
         all_combos.append(combos)
         if min > diff:
             min = diff
             access = idx
-        diff, combos = make_canvas(all_rectangles(n), n)
+        diff, combos = make_canvas(n)
         idx += 1
 
-    # print(all_combos[access], min)
     return all_combos[access], min
 
-def solve_mondrian_5_times(n):
-    abs_min = n**2
+def solve_mondrian_M_times(dim, M):
+    abs_min = dim**2
     abs_combo = list()
-    for i in range(5):
-        combo, diff = solve_mondrian(n)
+    for m in range(M):
+        combo, diff = solve_mondrian(dim)
         print(diff)
         if diff < abs_min:
             abs_min = diff
             abs_combo = combo
 
-    print('5 times:')
+    print(f'solved {dim}x{dim} puzzle {M} times:')
     print(abs_combo, abs_min)
 
-# solve_mondrian_5_times(4)
-
+solve_mondrian_M_times(15, 10)
+# the more cycles you run, the more accurate the result;
+# the best answer for 4x4 is 4, 11x11 is 9, 15x15 is 6, 32x32 is 16
 
 # ------------------------------------------------------------------
 ##  Challenge #368 [Intermediate] Single-symbol squares

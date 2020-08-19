@@ -21,6 +21,103 @@ def tally_ho(str):
 # print(tally_ho('EbAAdbBEaBaaBBdAccbeebaec'))
 
 # ------------------------------------------------------------------
+##  Challenge #363 [Intermediate] Word Hy-phen-a-tion By Com-put-er
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8qxpqd/20180613_challenge_363_intermediate_word/
+with open('tex-hyphenation-patterns.txt') as t:
+    patterns = t.read().splitlines()
+
+def all_patterns(word):
+    pattern_list = list()
+    for p in patterns:
+        substr = ''.join([elem for elem in p if not elem.isdigit()])
+        if substr[0] == '.' and word[0] == substr[1]:
+            substr = substr.replace('.', '')
+        if substr[-1] == '.' and word[-1] == substr[-2]:
+            substr = substr.replace('.', '')
+        if substr in word:
+            pattern_list.append(p)
+    return pattern_list
+
+def hyphenation(word):
+    # our goal is to create a dictionary in which
+    # the key is the index of the place where we can split the word and insert a hyphen in between
+    # and the value is the max value assigned for the char at word[index] or word[key]
+    hyphen_dict = dict()
+    patterns = all_patterns(word)
+    for pattern in patterns:
+        substr = ''.join([x for x in pattern if x.isalpha()])
+        for index, char in enumerate(pattern):
+            if char.isdigit():
+                # if a number appears first in the pattern
+                # insert at the index before where the substr starts
+                if index == 0: to_insert = word.index(substr) - 1
+                # if a number appears last
+                # insert at the index of the last element of the substr
+                elif index == len(pattern) - 1: to_insert = word.index(substr) + len(substr) - 1
+                # else, find the character appearing before the digit in the pattern
+                # and search for which index in the substr that char is present
+                else:
+                    char_before_digit = pattern[index - 1]
+                    to_insert = word.index(substr) + substr.index(char_before_digit)
+                hyphen_dict[to_insert] = max(hyphen_dict.get(to_insert, 0), int(char))
+
+    final_result = list(word)
+    for k, v in hyphen_dict.items():
+        if v % 2 != 0: final_result[k] += '-'
+
+    return ''.join(final_result)
+
+class HyphenationTest(unittest.TestCase):
+    def test_hyphenation(self):
+        self.assertEquals(hyphenation('mistranslate'), 'mis-trans-late')
+        self.assertEquals(hyphenation('alphabetical'), 'al-pha-bet-i-cal')
+        self.assertEquals(hyphenation('bewildering'), 'be-wil-der-ing')
+        self.assertEquals(hyphenation('buttons'), 'but-ton-s')
+        self.assertEquals(hyphenation('ceremony'), 'cer-e-mo-ny')
+        self.assertEquals(hyphenation('hovercraft'), 'hov-er-craft')
+        self.assertEquals(hyphenation('lexicographically'), 'lex-i-co-graph-i-cal-ly')
+        self.assertEquals(hyphenation('programmer'), 'pro-gram-mer')
+        self.assertEquals(hyphenation('recursion'), 're-cur-sion')
+
+# if __name__ == "__main__":
+#     unittest.main(HyphenationTest())
+
+# ------------------------------------------------------------------
+##  Challenge #363 [Easy] I before E except after C
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8q96da/20180611_challenge_363_easy_i_before_e_except/
+# If "ei" appears in a word, it must immediately follow "c".
+# If "ie" appears in a word, it must not immediately follow "c".
+
+def ie_ei_rule(str):
+    if str.find('ie') == -1 and str.find('ei') == -1: return True
+    if 'cie' in str: return False
+    elif 'cei' in str: return True
+    elif 'ei' in str: return False
+    elif 'ie' in str: return True
+    else: return True
+
+def exceptions():
+    with open('enable1.txt') as t:
+        examine = t.read().splitlines()
+        count = 0
+        for line in examine:
+            if not ie_ei_rule(line): count += 1
+    return count
+
+class IE_EI_Test(unittest.TestCase):
+    def test_ie_ei(self):
+        self.assertTrue(ie_ei_rule('a'))
+        self.assertTrue(ie_ei_rule('zombie'))
+        self.assertTrue(ie_ei_rule('transceiver'))
+        self.assertFalse(ie_ei_rule('veil'))
+        self.assertFalse(ie_ei_rule('icier'))
+    def test_exceptions(self):
+        self.assertEqual(exceptions(), 2169)
+
+# if __name__ == "__main__":
+#     unittest.main(IE_EI_Test())
+
+# ------------------------------------------------------------------
 ##  Challenge #364 [Easy] Create a Dice Roller
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/8s0cy1/20180618_challenge_364_easy_create_a_dice_roller/
 def dice_roller(dice_str):
@@ -39,21 +136,20 @@ def ducci_sequence(tup):
     seq = []
     steps = 0
     visited = []
-    t = tup
     while True:
         # print(seq)
         steps += 1
-        seq = list(t)
+        seq = list(tup)
         if sum(seq) == 0: break
 
         first = seq[0]
         for i in range(0, len(seq)):
             if i == len(seq) - 1: seq[i] = abs(seq[i] - first)
             else: seq[i] = abs(seq[i] - seq[i + 1])
-        
-        t = tuple(seq)
-        if t in visited: break
-        visited.append(t)
+
+        tup = tuple(seq)
+        if tup in visited: break
+        visited.append(tup)
 
     return steps
 

@@ -3,9 +3,6 @@ import random
 import math
 import operator
 
-def text_to_list(text):
-    return text.splitlines()
-
 # ------------------------------------------------------------------
 ##  Challenge #361 [Easy] Tally Program
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/8jcffg/20180514_challenge_361_easy_tally_program/
@@ -22,6 +19,111 @@ def tally_ho(str):
 
 # print(tally_ho('dbbaCEDbdAacCEAadcB'))
 # print(tally_ho('EbAAdbBEaBaaBBdAccbeebaec'))
+
+# ------------------------------------------------------------------
+##  Challenge #364 [Easy] Create a Dice Roller
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8s0cy1/20180618_challenge_364_easy_create_a_dice_roller/
+def dice_roller(dice_str):
+    idx = dice_str.find('d')
+    dice_rolls, dice_sides = int(dice_str[:idx]), int(dice_str[idx+1:])
+    if (dice_rolls < 1 or dice_rolls > 100) or (dice_sides < 2 or dice_sides > 100): return -1
+    result = [random.randint(2, dice_sides) for i in range(dice_rolls)]
+    print(f"{sum(result)} : {result}")
+
+# inputs to try out: 5d12, 6d4, 1d2, 1d8, 3d6, 4d20, 100d100
+
+# ------------------------------------------------------------------
+##  Challenge #364 [Intermediate] The Ducci Sequence
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8sjcl0/20180620_challenge_364_intermediate_the_ducci/
+def ducci_sequence(tup):
+    seq = []
+    steps = 0
+    visited = []
+    t = tup
+    while True:
+        # print(seq)
+        steps += 1
+        seq = list(t)
+        if sum(seq) == 0: break
+
+        first = seq[0]
+        for i in range(0, len(seq)):
+            if i == len(seq) - 1: seq[i] = abs(seq[i] - first)
+            else: seq[i] = abs(seq[i] - seq[i + 1])
+        
+        t = tuple(seq)
+        if t in visited: break
+        visited.append(t)
+
+    return steps
+
+class DucciTest(unittest.TestCase):
+    def test_ducci(self):
+        self.assertEqual(ducci_sequence((1,2,1,2,1,0)), 3)
+        self.assertEqual(ducci_sequence((0, 653, 1854, 4063)), 24)
+        self.assertEqual(ducci_sequence((10, 12, 41, 62, 31, 50)), 21)
+        self.assertEqual(ducci_sequence((10, 12, 41, 62, 31)), 29)
+        self.assertEqual(ducci_sequence((1, 5, 7, 9, 9)), 22)
+
+# if __name__ == "__main__":
+#     unittest.main(DucciTest())
+
+# ------------------------------------------------------------------
+##  Challenge #365 [Intermediate] Sales Commissions
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8xzwl6/20180711_challenge_365_intermediate_sales/
+basic_input = '''Revenue
+
+        Frank   Jane
+Tea       120    145
+Coffee    243    265
+
+Expenses
+
+        Frank   Jane
+Tea       130     59
+Coffee    143    198'''
+
+challenge_input = '''Revenue
+
+            Johnver Vanston Danbree Vansey  Mundyke
+Tea             190     140    1926     14      143
+Coffee          325      19     293   1491      162
+Water           682      14     852     56      659
+Milk            829     140     609    120       87
+
+Expenses
+
+            Johnver Vanston Danbree Vansey  Mundyke
+Tea             120      65     890     54      430
+Coffee          300      10      23    802      235
+Water            50     299    1290     12      145
+Milk             67     254      89    129       76'''
+
+def sales_commissions(input_string):
+    all_info = [line.strip().split() for line in input_string.split('\n') if line]
+
+    stop = all_info.index(['Expenses'])
+    revenue = all_info[:stop]
+    expenses = all_info[stop:]
+    salespersons = [p for p in all_info[1]]
+    sales_dict = dict()
+
+    for id, person in enumerate(salespersons):
+        commission = 0
+        for pos in range(2, len(revenue)):
+            product = revenue[pos][0]
+            rev = int(revenue[pos][id + 1])
+            exp = int(expenses[pos][id + 1])
+            if rev > exp:
+                commission += round((rev - exp) * 0.062, 2)
+        sales_dict[person] = sales_dict.get(person, 0) + commission
+
+    print(f"            {' '.join(salespersons)}")
+    print(f"Commission  {' '.join(f'{sales_dict[p]:>{len(p)}.2f}' for p in salespersons)}")
+
+# Run the program
+# sales_commissions(basic_input)
+# sales_commissions(challenge_input)
 
 # ------------------------------------------------------------------
 ##  Challenge #366 [Easy] Word funnel 1
@@ -76,7 +178,7 @@ def total_spacing_simple(word_list):
         count += spacing(word_list[i], word_list[i + 1])
     return count
 
-def min_spacing_for_word(target, word_list):
+def spacings_for_word(target, word_list):
     word_spacing_dict = dict()
     for word in word_list:
         if word == target: continue
@@ -85,25 +187,22 @@ def min_spacing_for_word(target, word_list):
 
 def total_spacing_complex(word_list, MAX_SPACING):
     answer_list = list()
-    visited_words = list()
     copy_list = word_list
     count = 0
 
     if copy_list:
         curr = random.choice(copy_list)
-        visited_words.append(curr)
         next = curr
         while count <= MAX_SPACING:
             answer_list.append(curr)
-            dict_for_curr = min_spacing_for_word(curr, copy_list)
+            dict_for_curr = spacings_for_word(curr, copy_list)
 
             min = list(dict_for_curr.keys())[0]
             next = random.choice(dict_for_curr[min])
             copy_list.remove(next)
+            curr = next
 
-            if count + min <= MAX_SPACING:
-                count += min
-                curr = next
+            if count + min <= MAX_SPACING: count += min
             else: break
 
     # print(answer_list)
@@ -113,8 +212,7 @@ def total_spacing_complex(word_list, MAX_SPACING):
 with open('363-hard-words.txt') as f:
     four_letters = f.read().splitlines()
 
-# print(min_spacing_for_word('duck', four_letters))
-print(total_spacing_complex(four_letters, 100))
+# print(total_spacing_complex(four_letters, 100)) # the most I got was 556
 
 class FunnelTest(unittest.TestCase):
     def test_funnel(self):
@@ -145,8 +243,8 @@ class FunnelTest(unittest.TestCase):
     def test_total_spacing_simple(self):
         self.assertEqual(total_spacing_simple(["daily", "doily", "golly", "guilt"]), 3)
     def test_total_spacing_complex(self):
-        self.assertEqual(total_spacing_complex(['abuzz', 'carts', 'curbs', 'degas',
-            'fruit', 'ghost', 'jupes', 'sooth', 'weirs', 'zebra'], 10, 2), 6)
+        self.assertAlmostEqual(total_spacing_complex(['abuzz', 'carts', 'curbs', 'degas',
+            'fruit', 'ghost', 'jupes', 'sooth', 'weirs', 'zebra'], 10), 6, delta=1)
 
 # if __name__ == "__main__":
 #     unittest.main(FunnelTest())

@@ -21,6 +21,114 @@ def tally_ho(str):
 # print(tally_ho('EbAAdbBEaBaaBBdAccbeebaec'))
 
 # ------------------------------------------------------------------
+##  Challenge #362 [Intermediate] "Route" Transposition Cipher
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8n8tog/20180530_challenge_362_intermediate_route/
+def go_vertical(board, DOWN, UP, y, x, dir):
+    result = ''
+    new_y = 0
+    if dir == 'down':
+        for i in range(y + 1, DOWN, 1):
+            new_y = i
+            result += board[new_y][x]
+        DOWN -= 1
+
+    if dir == 'up':
+        for i in range(y - 1, UP, -1):
+            new_y = i
+            result += board[new_y][x]
+        UP += 1
+
+    return result, new_y
+
+def go_horizontal(board, RIGHT, LEFT, y, x, dir):
+    result = board[y][x]
+    new_x = 0
+    if dir == 'right':
+        for i in range(x + 1, RIGHT, 1):
+            new_x = i
+            result += board[y][new_x]
+        RIGHT -= 1
+
+    if dir == 'left':
+        for i in range(x - 1, LEFT, -1):
+            new_x = i
+            result += board[y][new_x]
+        LEFT += 1
+
+    return result, y, new_x
+
+def spiral(board, height, width, y, x, rotation):
+    # clockwise: down, left, up, right
+    # counter-clockwise: left, down, right, up
+    encrypted = ''
+    DOWN, UP = height, -1
+    RIGHT, LEFT = width, -1
+    i = 0
+
+    if rotation == 'clockwise':
+        encrypted = board[y][x]
+        while len(encrypted) < width*height:
+            i += 1
+            if i % 4 == 1:
+                result, new_y = go_vertical(board, DOWN, UP, y, x, 'down')
+                if x > 0: new_x = x - 1 # prepare to turn left
+                RIGHT -= 1
+            if i % 4 == 2:
+                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'left')
+                DOWN -= 1 # clear base row
+            if i % 4 == 3:
+                result, new_y = go_vertical(board, DOWN, UP, y, x, 'up')
+                if x + 1 < width: new_x = x + 1 # prepare to turn right
+                LEFT += 1
+            if i % 4 == 0:
+                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'right')
+                UP += 1 # clear top row
+
+            encrypted += result
+            y, x = new_y, new_x
+
+    if rotation == 'counter-clockwise':
+        while len(encrypted) < width*height:
+            i += 1
+            if i % 4 == 1:
+                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'left')
+                UP += 1 # clear top row
+            if i % 4 == 2:
+                result, new_y = go_vertical(board, DOWN, UP, y, x, 'down')
+                if x + 1 < width: new_x = x + 1 # prepare to turn right
+                LEFT += 1
+            if i % 4 == 3:
+                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'right')
+                DOWN -= 1 # clear base row
+            if i % 4 == 0:
+                result, new_y = go_vertical(board, DOWN, UP, y, x, 'up')
+                if x > 0: new_x = x - 1 # prepare to turn left
+                RIGHT -= 1
+
+            encrypted += result
+            y, x = new_y, new_x
+
+    return encrypted
+
+def encryption(str, width, height, rotation):
+    word_chars = [x.upper() for x in str if x.isalpha()]
+    board = []
+    row = []
+
+    for i in range(width*height):
+        if i >= len(word_chars): row.append('X')
+        else: row.append(word_chars[i])
+        if (i+1) % width == 0:
+            board.append(row)
+            row = []
+
+    return spiral(board, height, width, 0, width - 1, rotation)
+
+print(encryption('WE ARE DISCOVERED. FLEE AT ONCE', 9, 3, 'clockwise'))
+print(encryption("I've even witnessed a grown man satisfy a camel", 9,5, 'clockwise'))
+print(encryption("Solving challenges on r/dailyprogrammer is so much fun!!", 8,6, 'counter-clockwise'))
+
+# ------------------------------------------------------------------
 ##  Challenge #363 [Intermediate] Word Hy-phen-a-tion By Com-put-er
 # Link: https://www.reddit.com/r/dailyprogrammer/comments/8qxpqd/20180613_challenge_363_intermediate_word/
 with open('tex-hyphenation-patterns.txt') as t:
@@ -40,7 +148,7 @@ def all_patterns(word):
 
 def hyphenation(word):
     # our goal is to create a dictionary in which
-    # the key is the index of the place where we can split the word and insert a hyphen in between
+    # the key is the index of the locations where we can split the word and insert a hyphen in between
     # and the value is the max value assigned for the char at word[index] or word[key]
     hyphen_dict = dict()
     patterns = all_patterns(word)

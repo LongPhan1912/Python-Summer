@@ -77,8 +77,12 @@ def spiral(board, height, width, y, x, rotation):
                 result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'left')
                 DOWN -= 1 # clear base row
             if i % 4 == 3:
+                # print(go_vertical(board, DOWN, UP, y, x+1, 'up'))
+                # print(y, x, LEFT)
+                if LEFT == x: x += 1
                 result, new_y = go_vertical(board, DOWN, UP, y, x, 'up')
                 if x + 1 < width: new_x = x + 1 # prepare to turn right
+                # print(new_y, new_x)
                 LEFT += 1
             if i % 4 == 0:
                 result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'right')
@@ -94,6 +98,7 @@ def spiral(board, height, width, y, x, rotation):
                 result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'left')
                 UP += 1 # clear top row
             if i % 4 == 2:
+                if LEFT == x: x += 1
                 result, new_y = go_vertical(board, DOWN, UP, y, x, 'down')
                 if x + 1 < width: new_x = x + 1 # prepare to turn right
                 LEFT += 1
@@ -110,23 +115,35 @@ def spiral(board, height, width, y, x, rotation):
 
     return encrypted
 
-def encryption(str, width, height, rotation):
-    word_chars = [x.upper() for x in str if x.isalpha()]
-    board = []
-    row = []
-
+def encryption(str, coordinate, rotation):
+    width, height = coordinate[0], coordinate[1]
+    chars = [x.upper() for x in str if x.isalpha()]
+    board, row = [], []
     for i in range(width*height):
-        if i >= len(word_chars): row.append('X')
-        else: row.append(word_chars[i])
+        row.append('X') if i >= len(chars) else row.append(chars[i])
         if (i+1) % width == 0:
             board.append(row)
             row = []
 
     return spiral(board, height, width, 0, width - 1, rotation)
 
-print(encryption('WE ARE DISCOVERED. FLEE AT ONCE', 9, 3, 'clockwise'))
-print(encryption("I've even witnessed a grown man satisfy a camel", 9,5, 'clockwise'))
-print(encryption("Solving challenges on r/dailyprogrammer is so much fun!!", 8,6, 'counter-clockwise'))
+class TranspositionCypherTest(unittest.TestCase):
+    def test_cypher(self):
+        self.assertEqual(encryption("WE ARE DISCOVERED. FLEE AT ONCE", (9, 3), 'clockwise'),
+        'CEXXECNOTAEOWEAREDISLFDEREV')
+        self.assertEqual(encryption("why is this professor so boring omg", (6, 5), 'counter-clockwise'),
+        'TSIYHWHFSNGOMGXIRORPSIEOBOROSS')
+        self.assertEqual(encryption("Solving challenges on r/dailyprogrammer is so much fun!!", (8, 6), 'counter-clockwise'),
+        'CGNIVLOSHSYMUCHFUNXXMMLEGNELLAOPERISSOAIADRNROGR')
+        self.assertEqual(encryption("For lunch let's have peanut-butter and bologna sandwiches", (4, 12), 'clockwise'),
+        'LHSENURBGAISEHCNNOATUPHLUFORCTVABEDOSWDALNTTEAEN')
+        self.assertEqual(encryption("I've even witnessed a grown man satisfy a camel", (9,5), 'clockwise'),
+        'IGAMXXXXXXXLETRTIVEEVENWASACAYFSIONESSEDNAMNW')
+        self.assertEqual(encryption("Why does it say paper jam when there is no paper jam?", (3, 14), 'counter-clockwise'),
+        'YHWDSSPEAHTRSPEAMXJPOIENWJPYTEOIAARMEHENAR')
+
+# if __name__ == "__main__":
+#     unittest.main(TranspositionCypherTest())
 
 # ------------------------------------------------------------------
 ##  Challenge #363 [Intermediate] Word Hy-phen-a-tion By Com-put-er

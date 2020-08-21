@@ -57,75 +57,47 @@ def go_horizontal(board, RIGHT, LEFT, y, x, dir):
 
     return result, y, new_x
 
-def spiral(board, height, width, y, x, rotation):
-    # clockwise: down, left, up, right
-    # counter-clockwise: left, down, right, up
-    encrypted = ''
+def spiral(board, height, width, coordinate, rotation):
+    y, x = coordinate[0], coordinate[1]
+    encrypted = board[y][x]
     DOWN, UP = height, -1
     RIGHT, LEFT = width, -1
     i = 0
+    dir, steps = ['down', 'left', 'up', 'right'], [0, 1, 2, 3] # if clockwise; set default
 
-    if rotation == 'clockwise':
-        encrypted = board[y][x]
-        while len(encrypted) < width*height:
-            i += 1
-            if i % 4 == 1:
-                result, new_y = go_vertical(board, DOWN, UP, y, x, 'down')
-                if x > 0: new_x = x - 1 # prepare to turn left
-                RIGHT -= 1
-            if i % 4 == 2:
-                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'left')
-                DOWN -= 1 # clear base row
-            if i % 4 == 3:
-                # print(go_vertical(board, DOWN, UP, y, x+1, 'up'))
-                # print(y, x, LEFT)
-                if LEFT == x: x += 1
-                result, new_y = go_vertical(board, DOWN, UP, y, x, 'up')
-                if x + 1 < width: new_x = x + 1 # prepare to turn right
-                # print(new_y, new_x)
-                LEFT += 1
-            if i % 4 == 0:
-                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'right')
-                UP += 1 # clear top row
+    if rotation == 'counter-clockwise': # go from last if statement up (in the while loop), so everything's reversed
+        dir = ['up', 'right', 'down', 'left']
+        steps.reverse()
+        encrypted = ''
 
-            encrypted += result
-            y, x = new_y, new_x
-
-    if rotation == 'counter-clockwise':
-        while len(encrypted) < width*height:
-            i += 1
-            if i % 4 == 1:
-                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'left')
-                UP += 1 # clear top row
-            if i % 4 == 2:
-                if LEFT == x: x += 1
-                result, new_y = go_vertical(board, DOWN, UP, y, x, 'down')
-                if x + 1 < width: new_x = x + 1 # prepare to turn right
-                LEFT += 1
-            if i % 4 == 3:
-                result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, 'right')
-                DOWN -= 1 # clear base row
-            if i % 4 == 0:
-                result, new_y = go_vertical(board, DOWN, UP, y, x, 'up')
-                if x > 0: new_x = x - 1 # prepare to turn left
-                RIGHT -= 1
-
-            encrypted += result
-            y, x = new_y, new_x
+    while len(encrypted) < width*height:
+        if i % 4 == steps[0]:
+            result, new_y = go_vertical(board, DOWN, UP, y, x, dir[0])
+            if x > 0: new_x = x - 1 # prepare to turn left
+            RIGHT -= 1
+        if i % 4 == steps[1]:
+            result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, dir[1])
+            DOWN -= 1 # clear base row
+        if i % 4 == steps[2]:
+            if LEFT == x: x += 1
+            result, new_y = go_vertical(board, DOWN, UP, y, x, dir[2])
+            if x + 1 < width: new_x = x + 1 # prepare to turn right
+            LEFT += 1
+        if i % 4 == steps[3]:
+            result, new_y, new_x = go_horizontal(board, RIGHT, LEFT, y, x, dir[3])
+            UP += 1 # clear top row
+        encrypted += result
+        y, x = new_y, new_x
+        i += 1
 
     return encrypted
 
 def encryption(str, coordinate, rotation):
-    width, height = coordinate[0], coordinate[1]
-    chars = [x.upper() for x in str if x.isalpha()]
-    board, row = [], []
-    for i in range(width*height):
-        row.append('X') if i >= len(chars) else row.append(chars[i])
-        if (i+1) % width == 0:
-            board.append(row)
-            row = []
-
-    return spiral(board, height, width, 0, width - 1, rotation)
+    w, h = coordinate[0], coordinate[1] # get the width and height
+    chars = [x.upper() for x in str if x.isalpha()] # get all the letters in the str and make them uppercase
+    chars += ['X'] * (w*h - len(chars)) # when done, fill in any leftover space with 'X'
+    board = [chars[i:i+w] for i in range(0, len(chars), w)] # make equal rows that matches the width
+    return spiral(board, h, w, (0, w - 1), rotation)
 
 class TranspositionCypherTest(unittest.TestCase):
     def test_cypher(self):

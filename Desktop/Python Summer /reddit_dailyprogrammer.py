@@ -2,6 +2,58 @@ import unittest
 import random
 import math
 import operator
+import urllib.request, json
+from math import atan2, sin, cos, radians, sqrt, inf
+import ssl
+# ------------------------------------------------------------------
+##  Challenge #360 [Intermediate] Find the Nearest Aeroplane
+# Link: https://www.reddit.com/r/dailyprogrammer/comments/8i5zc3/20180509_challenge_360_intermediate_find_the/
+
+# Ignore SSL certificate errors
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+data = urllib.request.urlopen("https://opensky-network.org/api/states/all", context=ctx).read().decode()
+states = json.loads(data)['states']
+
+RADIUS = 6378 # in kilometers
+def geodistance(lats, longs):
+    if lats == None or longs == None: return -1
+    theta = [radians(d) for d in lats if d]
+    lambd = [radians(d) for d in longs if d]
+
+    if len(theta) < 2 or len(lambd) < 2: return -1
+    delta_lat = theta[0] - theta[1]
+    delta_long = lambd[0] - lambd[1]
+
+    a = sin(delta_lat/2)**2 + cos(theta[0]) * cos(theta[1]) * sin(delta_long/2)**2
+    c = 2*atan2(sqrt(a), sqrt(1-a))
+    return RADIUS*c
+
+def closest_dist(location, lat_text, long_text):
+    s1, s2 = lat_text.split(), long_text.split()
+    lat, long = float(s1[0]), float(s2[0])
+    if s1[1] == 'S': lat = -lat
+    if s2[1] == 'W': long = -long
+    min_dist = 1000000
+    final_state = None
+    for s in states:
+        geo_dist = geodistance([lat, s[6]], [long, s[5]])
+        if geo_dist < min_dist and geo_dist > 0:
+            min_dist = geo_dist
+            final_state = s
+
+    print(f"\n{location}\n-----------------------")
+    print(f"Geodesic distance: {min_dist} km")
+    print(f"Callsign: {final_state[1]}")
+    print(f"Latitude and longitude: {(final_state[6], final_state[5])}")
+    print(f"Geometric Altitude: {final_state[7]}")
+    print(f"Country of origin: {final_state[2]}")
+    print(f"ICA024 ID: {final_state[0]}")
+
+closest_dist('EIFFEL TOWER', '48.8584 N', '2.2945 E') # the result changes a lot, but fun to see what you get
+closest_dist('JFK AIRPORT', '40.6413 N', '73.7781 W')
 
 # ------------------------------------------------------------------
 ##  Challenge #361 [Easy] Tally Program
